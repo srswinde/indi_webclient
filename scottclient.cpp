@@ -46,37 +46,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <memory>
 #include <string.h>
 #include <uWS/uWS.h> 
+#include <thread>
+#include "/home/scott/git-clones/json/src/json.hpp"
+using json = nlohmann::json;
 #define MYCCD "Simple CCD"
+
 
 /* Our client auto pointer */
 std::unique_ptr<MyClient> camera_client(new MyClient());
 
-//int main(int /*argc*/, char ** /*argv*/)
-/*
-{
-    camera_client->setServer("localhost", 7624);
 
-    camera_client->watchDevice("Simple Device");
 
-    camera_client->connectServer();
 
-    //camera_client->setBLOBMode(B_ALSO, MYCCD, nullptr);
 
-    std::cout << "Press any key to terminate the client.\n";
-    std::string term;
-    std::cin >> term;
-}
-*/
-
-int main()                                                                                             
+void WSthread()
 {                                                                                                      
-    uWS::Hub h;                                                                                        
+    uWS::Hub h;
                                                                                                        
     h.onMessage([](uWS::WebSocket<uWS::SERVER> *ws, char *message, size_t length, uWS::OpCode opCode) {
 		std::cout << "We got one!" << std::endl;
         ws->send(message, length, opCode);                                                             
     });                                                                                                
-                                                                                                       
     h.listen(3000);                                                                                    
     h.run();                                                                                           
 }                                                                                                      
@@ -144,7 +134,7 @@ void MyClient::newDevice(INDI::BaseDevice *dp)
 {
     if (!strcmp(dp->getDeviceName(), MYCCD))
         IDLog("Receiving %s Device...\n", dp->getDeviceName());
-
+	std::cout << dp->getDeviceName() << std::endl;
     ccd_simulator = dp;
 }
 
@@ -177,7 +167,10 @@ void MyClient::newNumber(INumberVectorProperty *nvp)
 {
     // Let's check if we get any new values for CCD_TEMPERATURE
 	
-        IDLog("Receving new CCD Temperature: %g C\n", nvp->np[1].value);
+        //IDLog("Receving new CCD Temperature: %g C\n", nvp->np[1].value);
+		json j;
+		j["num"] = nvp->np[1].value;
+		std::cout << j.dump(4) << std::endl;
 
 }
 
@@ -208,4 +201,22 @@ void MyClient::newBLOB(IBLOB *bp)
     myfile.close();
 
     IDLog("Received image, saved as ccd_simulator.fits\n");
+}
+
+
+int main(int /*argc*/, char ** /*argv*/)
+
+{
+    camera_client->setServer("localhost", 7624);
+
+    camera_client->watchDevice(MYCCD);
+
+    camera_client->connectServer();
+
+    //camera_client->setBLOBMode(B_ALSO, MYCCD, nullptr);
+	std::thread t1(WSthread);
+    std::cout << "Press any key to terminate the client.\n";
+    std::string term;
+    std::cin >> term;
+	t1.join();
 }
