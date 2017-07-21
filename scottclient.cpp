@@ -134,7 +134,9 @@ void MyClient::newDevice(INDI::BaseDevice *dp)
 {
     if (!strcmp(dp->getDeviceName(), MYCCD))
         IDLog("Receiving %s Device...\n", dp->getDeviceName());
-	std::cout << dp->getDeviceName() << std::endl;
+	//std::cout << "The new device is " << dp->getDeviceName() << std::endl;
+	
+	watchDevice( dp->getDeviceName() );
     ccd_simulator = dp;
 }
 
@@ -143,9 +145,15 @@ void MyClient::newDevice(INDI::BaseDevice *dp)
 *************************************************************************************/
 void MyClient::newProperty(INDI::Property *property)
 {
-    if (!strcmp(property->getDeviceName(), MYCCD) && !strcmp(property->getName(), "CONNECTION"))
+
+	
+	//std::cout << "New property name  "<< property->getName() << std::endl;
+	
+    //connectDevice(property->getDeviceName());
+	//watchDevice( property->getDeviceName() );
+    if ( !strcmp(property->getName(), "CONNECTION") )
     {
-        connectDevice(MYCCD);
+        connectDevice(property->getDeviceName());
         return;
     }
 
@@ -160,6 +168,13 @@ void MyClient::newProperty(INDI::Property *property)
     }
 }
 
+
+void MyClient::newSwitch( ISwitchVectorProperty *svp )
+{
+	std::cout << svp->name << std::endl;
+
+}
+
 /**************************************************************************************
 **
 ***************************************************************************************/
@@ -168,9 +183,31 @@ void MyClient::newNumber(INumberVectorProperty *nvp)
     // Let's check if we get any new values for CCD_TEMPERATURE
 	
         //IDLog("Receving new CCD Temperature: %g C\n", nvp->np[1].value);
-		json j;
-		j["num"] = nvp->np[1].value;
-		std::cout << j.dump(4) << std::endl;
+		json jnvp;
+		json jnp;
+		jnvp["name"] = nvp->name;
+		jnvp["label"] = nvp->label;
+		jnvp["device"] = nvp->device;
+		jnvp["group"] = nvp->group;
+		jnvp["np"] = jnp;
+			
+		INumber *np;
+		for(int ii=0; ii<nvp->nnp; ii++)
+		{
+			np = nvp->np+ii;
+			jnvp["np"][ii]["name"] = np->name;
+			jnvp["np"][ii]["value"] = np->value;
+			
+			jnvp["np"][ii]["format"] = np->format;
+			jnvp["np"][ii]["min"] = np->min;
+			jnvp["np"][ii]["step"] = np->step;
+			jnvp["np"][ii]["label"] = np->label;
+			
+			jnvp["np"][ii]["max"] = np->max;
+			
+		}
+		
+		std::cout << jnvp.dump(4) << std::endl;
 
 }
 
@@ -208,10 +245,17 @@ int main(int /*argc*/, char ** /*argv*/)
 
 {
     camera_client->setServer("localhost", 7624);
-
-    camera_client->watchDevice(MYCCD);
-
+	
     camera_client->connectServer();
+	std::vector< INDI::BaseDevice * >  devs;
+	camera_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
+	std::cout << "the size is "  << devs.size() << std::endl;
+	for(int i=0; i<devs.size(); i++ )
+	{
+		std::cout << "THe dev name is " << devs[i]->getDeviceName() << std::endl;
+	}
+    //camera_client->watchDevice(MYCCD);
+
 
     //camera_client->setBLOBMode(B_ALSO, MYCCD, nullptr);
 	std::thread t1(WSthread);
