@@ -37,7 +37,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
     The client will connect to the CCD driver and attempts to change the CCD temperature.
 */
 
-#include "tutorial_client.h"
 
 #include "basedevice.h"
 
@@ -48,9 +47,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <uWS/uWS.h> 
 #include <thread>
 #include "/home/scott/git-clones/json/src/json.hpp"
+#include <mutex>
+#include <queue>
+#include <string>
 using json = nlohmann::json;
+#include "tutorial_client.h"
 #define MYCCD "Simple CCD"
-
+bool test = true;
 
 /* Our client auto pointer */
 std::unique_ptr<MyClient> camera_client(new MyClient());
@@ -58,19 +61,82 @@ std::unique_ptr<MyClient> camera_client(new MyClient());
 
 
 
+		
+void ComQ::push(json *data)
+{
 
-void WSthread()
-{                                                                                                      
+	std::lock_guard<std::mutex> lock(qutex);
+	q.push(data->dump(4));
+	if(q.size() > 500 )
+		q.pop();
+}
+std::string ComQ::front() 
+{
+	std::lock_guard<std::mutex> lock(qutex);
+	return q.front();
+}
+std::string ComQ::pop()
+{
+	std::lock_guard<std::mutex> lock(qutex);
+	std::string front = q.front();
+	q.pop();
+	return front;
+}
+
+void WSthread(ComQ *q, ComQ  *devQ)
+{
+
+
     uWS::Hub h;
-                                                                                                       
-    h.onMessage([](uWS::WebSocket<uWS::SERVER> *ws, char *message, size_t length, uWS::OpCode opCode) {
-		std::cout << "We got one!" << std::endl;
-        ws->send(message, length, opCode);                                                             
-    });                                                                                                
-    h.listen(3000);                                                                                    
-    h.run();                                                                                           
-}                                                                                                      
+    h.onMessage([&](uWS::WebSocket<uWS::SERVER> *ws, char *message, size_t length, uWS::OpCode opCode) {
+		
+		char buff[5000];
+		char readbuff[500];
+		bool send=false;
+		strncpy(readbuff, message, length);
+		readbuff[length] = '\0';//terminate for some reason
+		q->connected = true;
+		json inj = json::parse(readbuff);
+		
+		time_t b4=time(NULL);
+		if(inj.find("task") != inj.end())
+		{
+			if(inj["task"] == "collect")
+				send=true;
+			else if(inj["task"] == "updateSwitch")
+			{
+				devQ->push(&inj);
+			}
+		}	
+		while( send && q->connected && ((time(NULL)-b4) < 5) )
+		{
+			if(q->size() > 0)	
+			{
+				strcpy( buff, q->front().c_str() );
+			
+    	    	ws->send(buff, strlen(buff), opCode);
+				q->pop();
+    	    	//ws->send(message, length,  opCode);
+			}
+			usleep( (int) 250);
+		}
+		//std::cout << "stopping the send" << std::endl;
+		//ws->close();
+    });
 
+	h.onDisconnection([&](uWS::WebSocket<uWS::SERVER> *ws, int code, char *message, size_t length) 
+	{
+		std::cout << "disconnect" << std::endl; 
+		q->connected = false;
+		
+		//ws->close();
+		h.getDefaultGroup<uWS::SERVER>().close();
+	});
+
+    h.listen(3000);
+    h.run();
+
+}
 
 /**************************************************************************************
 **
@@ -132,12 +198,10 @@ void MyClient::takeExposure()
 ***************************************************************************************/
 void MyClient::newDevice(INDI::BaseDevice *dp)
 {
-    if (!strcmp(dp->getDeviceName(), MYCCD))
-        IDLog("Receiving %s Device...\n", dp->getDeviceName());
-	//std::cout << "The new device is " << dp->getDeviceName() << std::endl;
-	
-	watchDevice( dp->getDeviceName() );
-    ccd_simulator = dp;
+	json nd;
+	nd["metainfo"] = "newDevice";
+	nd["name"] = dp->getDeviceName();
+	clientQ->push(&nd);
 }
 
 /**************************************************************************************
@@ -145,9 +209,33 @@ void MyClient::newDevice(INDI::BaseDevice *dp)
 *************************************************************************************/
 void MyClient::newProperty(INDI::Property *property)
 {
+	ISwitchVectorProperty *svp;
+	ITextVectorProperty *tvp;
+	INumberVectorProperty *nvp;
+	json indijson;
+	switch(property->getType())
+	{
+		case INDI_SWITCH:
+			svp = property->getSwitch();
+			indijson = jsonify(svp);
+			clientQ->push(&indijson);
+		break;
+		case INDI_NUMBER:
+			nvp = property->getNumber();
+			indijson = jsonify(nvp);
+			clientQ->push(&indijson);
+		break;
+		case INDI_TEXT:
+			tvp = property->getText();
+			indijson = jsonify(tvp);
+			clientQ->push(&indijson);
+		break;
 
-	
-	//std::cout << "New property name  "<< property->getName() << std::endl;
+		default:
+			std::cout << "IDK" << std::endl;
+	}
+	/*
+	std::cout << "New property name  "<< property->getName() << std::endl;
 	
     //connectDevice(property->getDeviceName());
 	//watchDevice( property->getDeviceName() );
@@ -165,14 +253,14 @@ void MyClient::newProperty(INDI::Property *property)
             setTemperature();
         }
         return;
-    }
+    }*/
 }
 
 
 void MyClient::newSwitch( ISwitchVectorProperty *svp )
 {
-	std::cout << svp->name << std::endl;
-
+		json jsvp=jsonify(svp);
+		clientQ->push(&jsvp);
 }
 
 /**************************************************************************************
@@ -183,31 +271,8 @@ void MyClient::newNumber(INumberVectorProperty *nvp)
     // Let's check if we get any new values for CCD_TEMPERATURE
 	
         //IDLog("Receving new CCD Temperature: %g C\n", nvp->np[1].value);
-		json jnvp;
-		json jnp;
-		jnvp["name"] = nvp->name;
-		jnvp["label"] = nvp->label;
-		jnvp["device"] = nvp->device;
-		jnvp["group"] = nvp->group;
-		jnvp["np"] = jnp;
-			
-		INumber *np;
-		for(int ii=0; ii<nvp->nnp; ii++)
-		{
-			np = nvp->np+ii;
-			jnvp["np"][ii]["name"] = np->name;
-			jnvp["np"][ii]["value"] = np->value;
-			
-			jnvp["np"][ii]["format"] = np->format;
-			jnvp["np"][ii]["min"] = np->min;
-			jnvp["np"][ii]["step"] = np->step;
-			jnvp["np"][ii]["label"] = np->label;
-			
-			jnvp["np"][ii]["max"] = np->max;
-			
-		}
-		
-		std::cout << jnvp.dump(4) << std::endl;
+		json jnvp = jsonify(nvp);
+			clientQ->push(&jnvp);
 
 }
 
@@ -241,26 +306,189 @@ void MyClient::newBLOB(IBLOB *bp)
 }
 
 
+json MyClient::jsonify(ISwitchVectorProperty* svp)
+{
+/*char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPerm 	p
+ISRule 	r
+double 	timeout
+IPState 	s
+ISwitch * 	sp
+int 	nsp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux*/
+
+		json jsvp;
+		json jsp;
+		jsvp["metainfo"] = "svp";
+		jsvp["device"] = svp->device;
+		jsvp["name"] = svp->name;
+		jsvp["label"] = svp->label;
+		jsvp["group"] = svp->group;
+		jsvp["perm"] = svp->p;
+		jsvp["rule"] = svp->r;
+		jsvp["timeout"] = svp->timeout;
+		jsvp["state"] = svp->s;
+		//jsvp["timestamp"] = std::string(svp->timestamp);
+		
+		jsvp["sp"] = jsp;
+		ISwitch *sp;
+		for(int ii=0; ii<svp->nsp; ii++)
+		{
+			sp = svp->sp+ii;
+			jsvp["sp"][ii]["label"] = sp->label;
+			jsvp["sp"][ii]["name"] = sp->name;
+			jsvp["sp"][ii]["state"] = sp->s;
+			
+		}
+
+	return jsvp;
+}
+
+json MyClient::jsonify(INumberVectorProperty *nvp)
+{
+		json jnvp;
+		json jnp;
+		jnvp["metainfo"] = "nvp";
+		jnvp["device"] = nvp->device;
+		jnvp["name"] = nvp->name;
+		jnvp["label"] = nvp->label;
+		jnvp["group"] = nvp->group;
+		jnvp["perm"] = nvp->p;
+		jnvp["timeout"] = nvp->timeout;
+		jnvp["state"] = nvp->s;
+		//jnvp["timestamp"] = nvp->timestamp;
+		
+		jnvp["np"] = jnp;
+			
+		INumber *np;
+		for(int ii=0; ii<nvp->nnp; ii++)
+		{
+			np = nvp->np+ii;
+			jnvp["np"][ii]["label"] = np->label;
+			jnvp["np"][ii]["name"] = np->name; 
+			jnvp["np"][ii]["format"] = np->format;
+			jnvp["np"][ii]["min"] = np->min;
+			jnvp["np"][ii]["step"] = np->step;
+			jnvp["np"][ii]["max"] = np->max;
+			jnvp["np"][ii]["value"] = np->value;
+			
+			
+			
+		}
+	return jnvp;
+
+}
+
+json MyClient::jsonify(ITextVectorProperty *tvp)
+{
+/*
+char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPerm 	p
+double 	timeout
+IPState 	s
+IText * 	tp
+int 	ntp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux
+*/
+	json jtvp;
+	IText *tp;
+	jtvp["metainfo"] = "tvp";
+	jtvp["device"] = tvp->device;
+	jtvp["name"] = tvp->name;
+	jtvp["label"] = tvp->label;
+	jtvp["group"] = tvp->group;
+	jtvp["perm"] = tvp->p;
+	jtvp["timeout"] = tvp->timeout;
+	jtvp["state"] = tvp->s;
+	jtvp["timestsamp"] = "";
+	for(int ii=0; ii<tvp->ntp; ii++)
+	{
+		tp=tvp->tp+ii;
+		jtvp["tp"][ii]["name"] = tp->name;
+		jtvp["tp"][ii]["label"] = tp->label;
+		jtvp["tp"][ii]["text"] = tp->text;
+	}
+	return jtvp;
+
+}
+
+void MyClient::Update(json data)
+{
+	std::string devname;
+	std::string grpname;
+	std::string spname;
+	std::string propname;
+	
+	INDI::BaseDevice *dev;
+	ISwitchVectorProperty *svp;
+	ISwitch *sp;
+	
+
+	if(data.find("newSwitch") != data.end() )
+	{
+		devname = data["newSwitch"]["device"];
+		grpname = data["newSwitch"]["group"];
+		propname = data["newSwitch"]["name"];
+		
+		dev = getDevice(devname.c_str());
+		svp = dev->getSwitch( propname.c_str());
+		for(int ii=0; ii<data["newSwitch"]["sp"].size(); ii++)
+		{
+			spname = data["newSwitch"]["sp"][ii]["name"];
+			sp = IUFindSwitch(svp, spname.c_str());
+			if(data["newSwitch"]["sp"][ii]["state"])
+				sp->s = ISS_ON;
+			else
+				sp->s = ISS_OFF;
+		}
+		sendNewSwitch(svp);
+
+	}
+}
+
 int main(int /*argc*/, char ** /*argv*/)
 
 {
+	ComQ comQ;
+	ComQ devQ;
+	camera_client->setQ(&comQ);
+	camera_client->setDevQ(&devQ);
+	
     camera_client->setServer("localhost", 7624);
+	
 	
     camera_client->connectServer();
 	std::vector< INDI::BaseDevice * >  devs;
 	camera_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
-	std::cout << "the size is "  << devs.size() << std::endl;
 	for(int i=0; i<devs.size(); i++ )
 	{
 		std::cout << "THe dev name is " << devs[i]->getDeviceName() << std::endl;
 	}
     //camera_client->watchDevice(MYCCD);
 
-
     //camera_client->setBLOBMode(B_ALSO, MYCCD, nullptr);
-	std::thread t1(WSthread);
-    std::cout << "Press any key to terminate the client.\n";
-    std::string term;
-    std::cin >> term;
+	
+	std::thread t1(WSthread, &comQ, &devQ);
+	comQ.connected = true;
+	while(comQ.connected)
+	{
+		if(devQ.size() !=0)
+		{
+			
+			
+			camera_client->Update(json::parse(devQ.pop()))	;
+			
+		}
+		usleep( (int) 5e5 );
+	}
+	test=false;
 	t1.join();
 }

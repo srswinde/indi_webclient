@@ -36,6 +36,23 @@
 
 #include "baseclient.h"
 
+
+class ComQ
+{
+	public:
+		ComQ(){}
+		void push(json * data);
+		std::string front();
+		int size() {return q.size();}
+		std::string pop();
+		bool connected;
+		
+	protected:
+		std::queue<std::string> q;
+		std::mutex qutex;
+
+};
+
 class MyClient : public INDI::BaseClient
 {
   public:
@@ -44,7 +61,11 @@ class MyClient : public INDI::BaseClient
 
     void setTemperature();
     void takeExposure();
-
+	void setQ(ComQ *q) {clientQ=q;}
+	void setDevQ(ComQ *q) {devQ=q;}
+	void Update(json data);
+	ComQ *clientQ;
+	ComQ *devQ;
   protected:
     virtual void newDevice(INDI::BaseDevice *dp);
     virtual void removeDevice(INDI::BaseDevice */*dp*/) {}
@@ -61,4 +82,7 @@ class MyClient : public INDI::BaseClient
 
   private:
     INDI::BaseDevice *ccd_simulator;
+	json jsonify(ISwitchVectorProperty *);
+	json jsonify(INumberVectorProperty *);
+	json jsonify(ITextVectorProperty *);
 };
