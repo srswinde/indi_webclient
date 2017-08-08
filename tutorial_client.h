@@ -46,6 +46,7 @@ class ComQ
 		int size() {return q.size();}
 		std::string pop();
 		bool connected;
+		int counter=0;
 		
 	protected:
 		std::queue<std::string> q;
@@ -75,7 +76,7 @@ class MyClient : public INDI::BaseClient
     virtual void newSwitch(ISwitchVectorProperty */*svp*/);
     virtual void newNumber(INumberVectorProperty *nvp);
     virtual void newMessage(INDI::BaseDevice *dp, int messageID);
-    virtual void newText(ITextVectorProperty */*tvp*/) {}
+    virtual void newText(ITextVectorProperty */*tvp*/);
     virtual void newLight(ILightVectorProperty */*lvp*/) {}
     virtual void serverConnected() {}
     virtual void serverDisconnected(int /*exit_code*/) {}
@@ -85,4 +86,5 @@ class MyClient : public INDI::BaseClient
 	json jsonify(ISwitchVectorProperty *);
 	json jsonify(INumberVectorProperty *);
 	json jsonify(ITextVectorProperty *);
+	json jsonify( std::string, const char *);
 };

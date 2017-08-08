@@ -64,22 +64,25 @@ std::unique_ptr<MyClient> camera_client(new MyClient());
 		
 void ComQ::push(json *data)
 {
-
+	counter++;
 	std::lock_guard<std::mutex> lock(qutex);
-	q.push(data->dump(4));
-	if(q.size() > 500 )
+	q.push( data->dump(4) );
+	if( q.size() > 500 )
 		q.pop();
 }
+
 std::string ComQ::front() 
 {
 	std::lock_guard<std::mutex> lock(qutex);
 	return q.front();
 }
+
 std::string ComQ::pop()
 {
 	std::lock_guard<std::mutex> lock(qutex);
 	std::string front = q.front();
 	q.pop();
+	counter--;
 	return front;
 }
 
@@ -88,39 +91,30 @@ void WSthread(ComQ *q, ComQ  *devQ)
 
 
     uWS::Hub h;
-    h.onMessage([&](uWS::WebSocket<uWS::SERVER> *ws, char *message, size_t length, uWS::OpCode opCode) {
+    h.onMessage([&devQ, q](uWS::WebSocket<uWS::SERVER> *ws, char *message, size_t length, uWS::OpCode opCode) {
 		
 		char buff[5000];
-		char readbuff[500];
+		char readbuff[5000];
 		bool send=false;
 		strncpy(readbuff, message, length);
 		readbuff[length] = '\0';//terminate for some reason
-		q->connected = true;
 		json inj = json::parse(readbuff);
+		time_t b4 = time(NULL);
+		//send info to the device
+		if(inj["task"] != "getProperties")
+		devQ->push(&inj);
 		
-		time_t b4=time(NULL);
-		if(inj.find("task") != inj.end())
-		{
-			if(inj["task"] == "collect")
-				send=true;
-			else if(inj["task"] == "updateSwitch")
-			{
-				devQ->push(&inj);
-			}
-		}	
-		while( send && q->connected && ((time(NULL)-b4) < 5) )
+		while(q->size()>0)
 		{
 			if(q->size() > 0)	
 			{
 				strcpy( buff, q->front().c_str() );
-			
+				
     	    	ws->send(buff, strlen(buff), opCode);
 				q->pop();
-    	    	//ws->send(message, length,  opCode);
 			}
 			usleep( (int) 250);
 		}
-		//std::cout << "stopping the send" << std::endl;
 		//ws->close();
     });
 
@@ -217,8 +211,9 @@ void MyClient::newProperty(INDI::Property *property)
 	{
 		case INDI_SWITCH:
 			svp = property->getSwitch();
-			indijson = jsonify(svp);
-			clientQ->push(&indijson);
+			//indijson = jsonify(svp);
+			//clientQ->push(&indijson);
+			newSwitch(svp);
 		break;
 		case INDI_NUMBER:
 			nvp = property->getNumber();
@@ -260,6 +255,8 @@ void MyClient::newProperty(INDI::Property *property)
 void MyClient::newSwitch( ISwitchVectorProperty *svp )
 {
 		json jsvp=jsonify(svp);
+		if(strcmp( svp->name, "correct" ) == 0)
+			std::cout << jsvp.dump(2) << std::endl;
 		clientQ->push(&jsvp);
 }
 
@@ -268,24 +265,31 @@ void MyClient::newSwitch( ISwitchVectorProperty *svp )
 ***************************************************************************************/
 void MyClient::newNumber(INumberVectorProperty *nvp)
 {
-    // Let's check if we get any new values for CCD_TEMPERATURE
 	
-        //IDLog("Receving new CCD Temperature: %g C\n", nvp->np[1].value);
 		json jnvp = jsonify(nvp);
-			clientQ->push(&jnvp);
+		clientQ->push(&jnvp);
 
 }
+/**************************************************************************************
+**
+***************************************************************************************/
+void MyClient::newText(ITextVectorProperty *tvp)
+{
+	
+		json jtvp = jsonify(tvp);
+		clientQ->push(&jtvp);
 
+}
 /**************************************************************************************
 **
 ***************************************************************************************/
 void MyClient::newMessage(INDI::BaseDevice *dp, int messageID)
 {
-    if (strcmp(dp->getDeviceName(), MYCCD))
-        return;
+	json jmsg = jsonify(dp->messageQueue(messageID), dp->getDeviceName());
+	
+	clientQ->push(&jmsg);
 
-    IDLog("Recveing message from Server:\n\n########################\n%s\n########################\n\n",
-          dp->messageQueue(messageID).c_str());
+          
 }
 
 /**************************************************************************************
@@ -323,6 +327,7 @@ void * 	aux*/
 
 		json jsvp;
 		json jsp;
+		
 		jsvp["metainfo"] = "svp";
 		jsvp["device"] = svp->device;
 		jsvp["name"] = svp->name;
@@ -332,8 +337,7 @@ void * 	aux*/
 		jsvp["rule"] = svp->r;
 		jsvp["timeout"] = svp->timeout;
 		jsvp["state"] = svp->s;
-		//jsvp["timestamp"] = std::string(svp->timestamp);
-		
+
 		jsvp["sp"] = jsp;
 		ISwitch *sp;
 		for(int ii=0; ii<svp->nsp; ii++)
@@ -344,7 +348,6 @@ void * 	aux*/
 			jsvp["sp"][ii]["state"] = sp->s;
 			
 		}
-
 	return jsvp;
 }
 
@@ -420,24 +423,46 @@ void * 	aux
 
 }
 
+
+json MyClient::jsonify(std::string msg, const char *devname)
+{
+	json jmsg;
+	jmsg["metainfo"] = "msg";
+	jmsg["msg"] = msg;
+	jmsg["device"] = devname;
+	return jmsg;
+
+}
+
 void MyClient::Update(json data)
 {
 	std::string devname;
 	std::string grpname;
-	std::string spname;
 	std::string propname;
-	
+		
+	std::string spname;
+	std::string npname;
+	std::string tpname;
+
+	std::string text;
+
 	INDI::BaseDevice *dev;
+
 	ISwitchVectorProperty *svp;
 	ISwitch *sp;
-	
+	INumberVectorProperty *nvp;
+	INumber *np;
+	ITextVectorProperty *tvp;
+	IText *tp;
+
+
 
 	if(data.find("newSwitch") != data.end() )
 	{
 		devname = data["newSwitch"]["device"];
 		grpname = data["newSwitch"]["group"];
 		propname = data["newSwitch"]["name"];
-		
+	
 		dev = getDevice(devname.c_str());
 		svp = dev->getSwitch( propname.c_str());
 		for(int ii=0; ii<data["newSwitch"]["sp"].size(); ii++)
@@ -452,6 +477,47 @@ void MyClient::Update(json data)
 		sendNewSwitch(svp);
 
 	}
+	else if( data.find("newNumber") != data.end() )
+	{
+		devname = data["newNumber"]["device"];
+		grpname = data["newNumber"]["group"];
+		propname = data["newNumber"]["name"];
+		
+		dev = getDevice(devname.c_str());
+		nvp = dev->getNumber( propname.c_str());
+		for(int ii=0; ii<data["newNumber"]["np"].size(); ii++)
+		{
+			
+			npname = data["newNumber"]["np"][ii]["name"];
+			np = IUFindNumber(nvp, npname.c_str());
+			np->value = data["newNumber"]["np"][ii]["value"];
+		}
+		
+		sendNewNumber(nvp);
+		
+
+	}
+	else if( data.find("newText") != data.end() )
+	{
+		devname = data["newText"]["device"];
+		grpname = data["newText"]["group"];
+		propname = data["newText"]["name"];
+		
+		dev = getDevice(devname.c_str());
+		tvp = dev->getText( propname.c_str());
+		for(int ii=0; ii<data["newText"]["tp"].size(); ii++)
+		{
+			
+			tpname = data["newText"]["tp"][ii]["name"];
+			tp = IUFindText(tvp, tpname.c_str());
+			text = data["newText"]["tp"][ii]["text"];
+			strcpy(tp->text, text.c_str());
+		}
+		sendNewText(tvp);
+		
+
+	}
+
 }
 
 int main(int /*argc*/, char ** /*argv*/)
@@ -482,10 +548,7 @@ int main(int /*argc*/, char ** /*argv*/)
 	{
 		if(devQ.size() !=0)
 		{
-			
-			
-			camera_client->Update(json::parse(devQ.pop()))	;
-			
+			camera_client->Update(json::parse(devQ.pop()));
 		}
 		usleep( (int) 5e5 );
 	}
