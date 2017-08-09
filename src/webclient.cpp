@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
 
 
 #include "basedevice.h"
-
+#include "/usr/include/libindi/indicom.h"
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -51,7 +51,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <queue>
 #include <string>
 using json = nlohmann::json;
-#include "tutorial_client.h"
+#include "webclient.h"
 #define MYCCD "Simple CCD"
 bool test = true;
 
@@ -95,12 +95,10 @@ void WSthread(ComQ *q, ComQ  *devQ)
 		
 		char buff[5000];
 		char readbuff[5000];
-		bool send=false;
 		strncpy(readbuff, message, length);
 		readbuff[length] = '\0';//terminate for some reason
 		json inj = json::parse(readbuff);
-		time_t b4 = time(NULL);
-		//send info to the device
+
 		if(inj["task"] != "getProperties")
 		devQ->push(&inj);
 		
@@ -440,6 +438,8 @@ void MyClient::Update(json data)
 	std::string grpname;
 	std::string propname;
 		
+	char strval[20];
+
 	std::string spname;
 	std::string npname;
 	std::string tpname;
@@ -465,7 +465,7 @@ void MyClient::Update(json data)
 	
 		dev = getDevice(devname.c_str());
 		svp = dev->getSwitch( propname.c_str());
-		for(int ii=0; ii<data["newSwitch"]["sp"].size(); ii++)
+		for(unsigned int ii=0; ii<data["newSwitch"]["sp"].size(); ii++)
 		{
 			spname = data["newSwitch"]["sp"][ii]["name"];
 			sp = IUFindSwitch(svp, spname.c_str());
@@ -485,14 +485,17 @@ void MyClient::Update(json data)
 		
 		dev = getDevice(devname.c_str());
 		nvp = dev->getNumber( propname.c_str());
-		for(int ii=0; ii<data["newNumber"]["np"].size(); ii++)
+		for(unsigned int ii=0; ii<data["newNumber"]["np"].size(); ii++)
 		{
 			
 			npname = data["newNumber"]["np"][ii]["name"];
 			np = IUFindNumber(nvp, npname.c_str());
-			np->value = data["newNumber"]["np"][ii]["value"];
+			text = data["newNumber"]["np"][ii]["value"];
+			strcpy(strval, text.c_str());
+			f_scansexa(strval, &np->value );
+			
+			
 		}
-		
 		sendNewNumber(nvp);
 		
 
@@ -505,7 +508,7 @@ void MyClient::Update(json data)
 		
 		dev = getDevice(devname.c_str());
 		tvp = dev->getText( propname.c_str());
-		for(int ii=0; ii<data["newText"]["tp"].size(); ii++)
+		for(unsigned int ii=0; ii<data["newText"]["tp"].size(); ii++)
 		{
 			
 			tpname = data["newText"]["tp"][ii]["name"];
@@ -534,7 +537,7 @@ int main(int /*argc*/, char ** /*argv*/)
     camera_client->connectServer();
 	std::vector< INDI::BaseDevice * >  devs;
 	camera_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
-	for(int i=0; i<devs.size(); i++ )
+	for(unsigned int i=0; i<devs.size(); i++ )
 	{
 		std::cout << "THe dev name is " << devs[i]->getDeviceName() << std::endl;
 	}

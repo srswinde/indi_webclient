@@ -1,10 +1,12 @@
-
-
+src=src
+include=$(src)
+CC=g++
+CFLAGS=-std=c++11 -Wall
+LIBS=-lindiclient -lz -lnova -lpthread -luWS -lssl
+EXE=webclient
 
 all:
-	g++ -std=c++11 scottclient.cpp -I/usr/include/libindi/ -lindiclient -lz -lnova -lpthread -o scottclient -luWS -lssl
+	$(CC) $(CFLAGS) $(src)/webclient.cpp -I/usr/include/libindi/ -o $(EXE) $(LIBS)
 
-sdev:
-	g++ -std=c++11 scottdevice.cpp -I/usr/include/libindi -lindidriver -lnova -lpthread -lz -o sdev
 
 
