@@ -90,7 +90,6 @@ function collect()
 *
 *
 ******************************************/
-******************************************/
 function INDIwebsocket(url, container)
 {
 	if(url == undefined)
