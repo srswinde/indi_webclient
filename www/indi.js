@@ -293,7 +293,9 @@ function newNumber(INDIvp, appendTo)
 			).append( function()
 			{
 				var ro = $('<span/>', {'class':'INumber_ro'})
-				var wo = $('<input/>', {'type':'text', 'class':'INumber_wo'})
+					
+				var len = parseInt(np.format[1]) + 1;
+				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
 				.keypress(function(event)
 				{
 					
