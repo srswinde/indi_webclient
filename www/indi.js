@@ -167,7 +167,7 @@ function AddDevice(devname, container)
 	if( $(container).find( devselector ).length == 0 ) 
 	{
 		var ul = $(container).find("ul.ulfortabs");
-		$("<li id'"+nosp(devname)+"'><a href='#"+nosp(devname)+"'>"+devname+"</a></li>").appendTo(ul);
+		$("<li id='"+nosp(devname)+"'><a href='#"+nosp(devname)+"'>"+devname+"</a></li>").appendTo(ul);
 		$("<div/>", {class:"INDIdevice", id:nosp(devname)}).appendTo( container );
 		$(container).tabs();
 	}
@@ -292,9 +292,9 @@ function newNumber(INDIvp, appendTo)
 			})
 			).append( function()
 			{
-				var ro = $('<span/>', {'class':'INumber_ro'})
-					
 				var len = parseInt(np.format[1]) + 1;
+				var ro = $('<span/>', {'class':'INumber_ro'}).css({ width:10*len+'px' })
+					
 				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
 				.keypress(function(event)
 				{
