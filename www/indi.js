@@ -294,7 +294,9 @@ function newNumber(INDIvp, appendTo)
 			})
 			).append( function()
 			{
-				var len = parseInt(np.format[1]) + 1;
+				var re = /%(\d+)\.(\d+)[fm]/
+				var numinfo = re.exec(np.format);
+				var len = parseInt(numinfo[1]);
 				var ro = $('<span/>', {'class':'INumber_ro'}).css({ width:10*len+'px' })
 					
 				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
@@ -337,8 +339,7 @@ function newNumber(INDIvp, appendTo)
 		var label = np.label.replace(" ", "_")
 		var name = np.name.replace(' ', '_');
 		var npid = nosp_dev+name;
-		
-		$(vpselector).find('span span.INumber_ro').text(formatNumber(np.value, np.format))
+		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(np.value)
 	});
 
 	return vpselector
