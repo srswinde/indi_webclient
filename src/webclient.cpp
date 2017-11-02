@@ -86,6 +86,8 @@ std::string ComQ::pop()
 	return front;
 }
 
+
+
 void WSthread(ComQ *q, ComQ  *devQ)
 {
 
@@ -433,8 +435,26 @@ json MyClient::jsonify(std::string msg, const char *devname)
 
 }
 
+
+/*******************************
+* Update
+* Args: data-> this is the json
+* data that has come from the web page
+*
+* Description:
+* This is were new indi properties 
+* come in from the web page
+* and are sent off to the client
+*
+*
+*
+*
+*
+***************************/
+
 void MyClient::Update(json data)
 {
+	
 	std::string devname;
 	std::string grpname;
 	std::string propname;
@@ -493,6 +513,7 @@ void MyClient::Update(json data)
 			np = IUFindNumber(nvp, npname.c_str());
 			text = data["newNumber"]["np"][ii]["value"];
 			strcpy(strval, text.c_str());
+			
 			f_scansexa(strval, &np->value );
 			
 			

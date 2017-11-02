@@ -221,6 +221,7 @@ function newText( INDIvp, appendTo )
 					if(event.which == 13)	
 					{
 						sendNewText(event)
+						return false;
 					}
 				})
 				switch(INDIvp.perm)
