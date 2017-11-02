@@ -200,7 +200,7 @@ void MyClient::newDevice(INDI::BaseDevice *dp)
 **
 *************************************************************************************/
 void MyClient::newProperty(INDI::Property *property)
-{
+{	
 	ISwitchVectorProperty *svp;
 	ITextVectorProperty *tvp;
 	INumberVectorProperty *nvp;
@@ -263,8 +263,9 @@ void MyClient::newSwitch( ISwitchVectorProperty *svp )
 ***************************************************************************************/
 void MyClient::newNumber(INumberVectorProperty *nvp)
 {
-	
+		
 		json jnvp = jsonify(nvp);
+		
 		clientQ->push(&jnvp);
 
 }
@@ -273,7 +274,7 @@ void MyClient::newNumber(INumberVectorProperty *nvp)
 ***************************************************************************************/
 void MyClient::newText(ITextVectorProperty *tvp)
 {
-	
+		
 		json jtvp = jsonify(tvp);
 		clientQ->push(&jtvp);
 
@@ -505,12 +506,11 @@ void MyClient::Update(json data)
 		devname = data["newText"]["device"];
 		grpname = data["newText"]["group"];
 		propname = data["newText"]["name"];
-		
 		dev = getDevice(devname.c_str());
 		tvp = dev->getText( propname.c_str());
+		
 		for(unsigned int ii=0; ii<data["newText"]["tp"].size(); ii++)
 		{
-			
 			tpname = data["newText"]["tp"][ii]["name"];
 			tp = IUFindText(tvp, tpname.c_str());
 			text = data["newText"]["tp"][ii]["text"];
