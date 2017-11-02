@@ -502,12 +502,14 @@ function sendNewText(event)
 		"tp":[],
 		}
 	};
-	ft.find(".IText textarea.INDITextwo").each(function( ii, tp ) 
+
+	ft.find("textarea.IText_wo").each(function( ii, tp ) 
 	{
+		console.log($(IText).closest(".IText"));
 		out.newText.tp.push(
 		{
-			"name":$(IText).closest(".IText").attr("INDIname"),
-			"label":$(IText).closest(".IText").attr("INDIlabel"),
+			"name":$(IText).closest("span.ITextspan").attr("INDIname"),
+			"label":$(IText).closest("span.ITextspan").attr("INDIlabel"),
 			"text":IText.prop("value"),
 
 		});
