@@ -339,7 +339,7 @@ function newNumber(INDIvp, appendTo)
 		var label = np.label.replace(" ", "_")
 		var name = np.name.replace(' ', '_');
 		var npid = nosp_dev+name;
-		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(np.value)
+		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(Math.round(np.value*10000)/10000)
 	});
 
 	return vpselector
