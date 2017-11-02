@@ -87,7 +87,21 @@ std::string ComQ::pop()
 }
 
 
-
+/********************************************************************
+ * WSthread
+ * Args:
+ *      q-> queue that handles json data form indidriver to webpage
+ *      devQ -> queue that handles json data from webpage to indidriver
+ * Description:
+ *      THis is the thread that handles the websocket communiccation
+ *      between this program and the webpage. 
+ *
+ *
+ *
+ *
+ *
+ *
+ * ***********************************************************************/
 void WSthread(ComQ *q, ComQ  *devQ)
 {
 
@@ -311,6 +325,21 @@ void MyClient::newBLOB(IBLOB *bp)
 }
 
 
+/*****************************************************************************************
+ * jsonify
+ *      args: any of the indi vector properties
+ *
+ * Description:
+ *      All jsonify functions converts the indi vector property to to a nice
+ *      json object to ship off to the webpage
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * *****************************************************************************************/
 json MyClient::jsonify(ISwitchVectorProperty* svp)
 {
 /*char 	device [MAXINDIDEVICE]
