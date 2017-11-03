@@ -14,5 +14,7 @@ webclient:
 
 install: webclient
 	cp webclient /usr/local/bin/webclient-indi
-
+	cp systemd/webclient-indi.service /etc/systemd/system
+	chmod 664 /etc/systemd/system/webclient-indi.service
+	systemctl daemon-reload
 	

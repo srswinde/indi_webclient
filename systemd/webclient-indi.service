@@ -1,0 +1,9 @@
+[Unit]
+
+Description= INDI driver for VATT hexapod
+After = VATTHEX-INDI.target
+
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/webclient-indi
