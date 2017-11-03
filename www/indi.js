@@ -66,7 +66,14 @@ function nosp(str)
 *************************************/
 function collect()
 {
-	INDIws.send(JSON.stringify({'task':'getProperties'}));
+	try
+	{
+		INDIws.send(JSON.stringify({'task':'getProperties'}));
+	}
+	catch(err)
+	{
+		console.log("The error is ", err);
+	}
 	setTimeout( collect, 100);
 }
 
@@ -149,6 +156,15 @@ function INDIwebsocket(url, container)
 		}
 		
 	};
+	INDIws.onerror = function(event)
+	{
+		//alert("There was an error!", event)
+	}
+	INDIws.onclose = function(event)
+	{
+		//alert("The connection has closed! If possible restart the webserver. This interface will reload when you hit ok.");
+		//location.reload()
+	}
 
 	INDIws.onopen = function(event) 
 	{

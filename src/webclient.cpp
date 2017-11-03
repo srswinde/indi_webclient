@@ -394,7 +394,7 @@ json MyClient::jsonify(INumberVectorProperty *nvp)
 		jnvp["timeout"] = nvp->timeout;
 		jnvp["state"] = nvp->s;
 		//jnvp["timestamp"] = nvp->timestamp;
-		
+		char buffer[MAXINDIFORMAT+5];
 		jnvp["np"] = jnp;
 			
 		INumber *np;
@@ -407,7 +407,10 @@ json MyClient::jsonify(INumberVectorProperty *nvp)
 			jnvp["np"][ii]["min"] = np->min;
 			jnvp["np"][ii]["step"] = np->step;
 			jnvp["np"][ii]["max"] = np->max;
-			jnvp["np"][ii]["value"] = np->value;
+			//jnvp["np"][ii]["value"] = np->value;
+			numberFormat(buffer, np->format, np->value);
+			
+			jnvp["np"][ii]["value"] = buffer;
 			
 			
 			
@@ -584,7 +587,11 @@ int main(int /*argc*/, char ** /*argv*/)
     camera_client->setServer("localhost", 7624);
 	
 	
-    camera_client->connectServer();
+    	while(camera_client->connectServer() == false)
+	{
+		std::cout << "Attempting to connect." << std::endl;
+		usleep(2e6);
+	}
 	std::vector< INDI::BaseDevice * >  devs;
 	camera_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
 	for(unsigned int i=0; i<devs.size(); i++ )
