@@ -76,6 +76,7 @@
 			right:10px;
 			margin:auto;
 			box-shadow: 5px 5px;
+			display:none;
 		}
 		ul
 		span#General_Info, span#Options, span.INDIgroup#Main_Control > h3, ul.devmenu, .INDIdevice hr, fieldset.INDItvp#cmdv, .INDIvp > legend, .INDIgroup#General_Info
@@ -152,12 +153,58 @@
 			display:none;
 		}*/
 		
+		span.INDIgroup h3
+		{
+			display:none;
+		}
+		#PosV.INDInvp 
+		{
+			position:relative;
+			display:inline;
+			left:140px;
+		}
+		#PosU.INDInvp
+		{
+			position:relative;
+			display:inline;
+			left:-180px;
+		}
+
+		
+		span fieldset#correct.INDIsvp > span, span fieldset#ref.INDIsvp > span
+		{
+			font-size:10px;
+			padding:5px;
+		}
+
+		span fieldset#correct.INDIsvp 
+		{
+			padding:5px
+		}
+		span fieldset#ref.INDIsvp 
+		{
+			padding:5px
+		}
+		.INDIdevice
+		{
+			padding:5px;
+		}
+
+		#helplink
+		{	
+			position: fixed;
+                        display:inline;
+                        bottom:20px;
+                        left:60px;
+		}
+			
 	</style>
 	</head>
 	<body onload="main()">
 		
-	<span id="refresh_button" class="ui-icon ui-icon-arrowrefresh-1-w"></span>
-	<script>$("span#refresh_button").on("click", function(event) {location.reload()})</script>
-	<textarea rows=3 cols=75 id="INDImsg"></textarea>
+		<span id="refresh_button" class="ui-icon ui-icon-arrowrefresh-1-w"></span>
+		<script>$("span#refresh_button").on("click", function(event) {location.reload()})</script>
+		<a href="https://lavinia.as.arizona.edu/~tscopewiki/doku.php?id=vatt:hexapod" id="helplink" target="_blank">Help</a>
+		<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
 </html>
