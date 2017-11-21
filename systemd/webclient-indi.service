@@ -6,7 +6,7 @@ After = VATTHEX-INDI.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/webclient-indi
+ExecStart=/usr/local/bin/startwebclient-indi
 User=root
 
 [Install]
