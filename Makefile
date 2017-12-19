@@ -19,3 +19,6 @@ install: webclient
 	systemctl daemon-reload
 	systemctl enable webclient-indi.service
 	
+
+clean: 
+	rm webclient
