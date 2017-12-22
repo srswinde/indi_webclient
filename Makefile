@@ -5,7 +5,7 @@ CFLAGS=-std=c++11 -Wall
 LIBS=-lindiclient -lz -lnova -lpthread -luWS -lssl
 EXE=webclient
 
-all: webclient
+all: clean webclient
 
 webclient:
 	$(CC) $(CFLAGS) $(src)/webclient.cpp -I/usr/include/libindi/ -o $(EXE) $(LIBS)
@@ -21,4 +21,4 @@ install: webclient
 	
 
 clean: 
-	rm webclient
+	rm -rf webclient

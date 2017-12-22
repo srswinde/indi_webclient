@@ -50,6 +50,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <mutex>
 #include <queue>
 #include <string>
+#include <sstream>
+#include <ostream>
+
 using json = nlohmann::json;
 #include "webclient.h"
 #define MYCCD "Simple CCD"
@@ -66,7 +69,7 @@ void ComQ::push(json *data)
 {
 	counter++;
 	std::lock_guard<std::mutex> lock(qutex);
-	q.push( data->dump(4) );
+	q.push( data->dump() );
 	if( q.size() > 500 )
 		q.pop();
 }
@@ -106,43 +109,42 @@ void WSthread(ComQ *q, ComQ  *devQ)
 {
 
 
-    uWS::Hub h;
-    h.onMessage([&devQ, q](uWS::WebSocket<uWS::SERVER> *ws, char *message, size_t length, uWS::OpCode opCode) {
+	char buff[5000];
+	while (1)
+	{
+		size_t n =-1;
+		std::string input;
+		json inj;
 		
-		char buff[5000];
-		char readbuff[5000];
-		strncpy(readbuff, message, length);
-		readbuff[length] = '\0';//terminate for some reason
-		json inj = json::parse(readbuff);
+		getline(std::cin, input)	;
+
+
+		try
+		{
+			inj = json::parse(input);
+		}
+		catch(...)
+		{
+			//std::cerr << cinstream << std::endl;
+			continue;
+		}
 
 		if(inj["task"] != "getProperties")
 		devQ->push(&inj);
-		
+
 		while(q->size()>0)
 		{
 			if(q->size() > 0)	
 			{
 				strcpy( buff, q->front().c_str() );
-				
-    	    	ws->send(buff, strlen(buff), opCode);
-				q->pop();
+				std::cout << buff << std::endl;
+				q->pop( );
 			}
 			usleep( (int) 250);
 		}
 		//ws->close();
-    });
+	}
 
-	h.onDisconnection([&](uWS::WebSocket<uWS::SERVER> *ws, int code, char *message, size_t length) 
-	{
-		std::cout << "disconnect" << std::endl; 
-		q->connected = false;
-		
-		//ws->close();
-		h.getDefaultGroup<uWS::SERVER>().close();
-	});
-
-    h.listen(3000);
-    h.run();
 
 }
 
@@ -269,8 +271,6 @@ void MyClient::newProperty(INDI::Property *property)
 void MyClient::newSwitch( ISwitchVectorProperty *svp )
 {
 		json jsvp=jsonify(svp);
-		if(strcmp( svp->name, "correct" ) == 0)
-			std::cout << jsvp.dump(2) << std::endl;
 		clientQ->push(&jsvp);
 }
 
@@ -589,14 +589,12 @@ int main(int /*argc*/, char ** /*argv*/)
 	
     	while(camera_client->connectServer() == false)
 	{
-		std::cout << "Attempting to connect." << std::endl;
 		usleep(2e6);
 	}
 	std::vector< INDI::BaseDevice * >  devs;
 	camera_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
 	for(unsigned int i=0; i<devs.size(); i++ )
 	{
-		std::cout << "THe dev name is " << devs[i]->getDeviceName() << std::endl;
 	}
     //camera_client->watchDevice(MYCCD);
 

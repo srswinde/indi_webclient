@@ -8,7 +8,7 @@
 	function main()
 	{
 		var url="ws://localhost:3000";
-		INDIwebsocket(url, 'body');
+		INDIwebsocket(url, 'body', true);
 	}	
 
 	function postProc(INDIvp, ele)
@@ -57,7 +57,12 @@
 		}
 	}
 
-
+	numele =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"']");
+	if( numele.length==1  )
+	{	
+		
+		return numele;
+	}
 	return grpselector;
 	}
 
@@ -193,15 +198,20 @@
 		#helplink
 		{	
 			position: fixed;
-                        display:inline;
-                        bottom:20px;
-                        left:60px;
+            display:inline;
+            bottom:20px;
+            left:60px;
 		}
+
+		
 			
 	</style>
 	</head>
 	<body onload="main()">
 		
+
+
+
 		<span id="refresh_button" class="ui-icon ui-icon-arrowrefresh-1-w"></span>
 		<script>$("span#refresh_button").on("click", function(event) {location.reload()})</script>
 		<a href="https://lavinia.as.arizona.edu/~tscopewiki/doku.php?id=vatt:hexapod" id="helplink" target="_blank">Help</a>

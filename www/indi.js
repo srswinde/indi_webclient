@@ -97,13 +97,19 @@ function collect()
 *
 *
 ******************************************/
-function INDIwebsocket(url, container)
+function INDIwebsocket(url, container, tabdevice)
 {
 	if(url == undefined)
 	{
 		url = "ws://swindell:3000"
 	}
 	
+	if (tabdevice == undefined)
+	{
+		tabdevice = false;
+	}
+
+	console.log(tabdevice);
 	container = (container == "undefined")? "body" : container
 	INDIws = new WebSocket( url );
 	INDIws.devices_container = container
@@ -121,7 +127,7 @@ function INDIwebsocket(url, container)
 		{
 			
 			case "newDevice":
-				AddDevice(data.name, container);
+				AddDevice(data.name, container, tabdevice);
 			break;
 			case "nvp":
 				ele = newNumber( data );
@@ -174,23 +180,29 @@ function INDIwebsocket(url, container)
 }	
 
 
-function AddDevice(devname, container)
+function AddDevice(devname, container, tabdevice)
 {
 	var devselector = "div.INDIdevice#"+nosp(devname);
 	container = (container==undefined)? 'body':container;
-	var uler = "ul"
+	var uler = "ul";
+	console.log(tabdevice);
 	if($(container).find(uler).length == 0)
 	{
 		$("<ul/>" ).appendTo(container) 
 	}
 	if( $(container).find( devselector ).length == 0 ) 
 	{
-		var ul = $(container).find(uler);
-		$("<li><a href='#"+nosp(devname)+"'>"+devname+"</a></li>").appendTo( ul );
-		$("<div/>", {id:nosp(devname)}).addClass("INDIdevice").appendTo( container );
-		$(container).tabs();
+		if(tabdevice)
+		{
+			var ul = $(container).find(uler);
+			$("<li><a href='#"+nosp(devname)+"'>"+devname+"</a></li>").appendTo( ul );
+			$("<div/>", {id:nosp(devname)}).addClass("INDIdevice").appendTo( container );
+		
+			$(container).tabs();
+		}
 	}
-	$(container).tabs("refresh")
+	if (tabdevice)
+		$(container).tabs("refresh")
 	return devselector;
 		
 }
