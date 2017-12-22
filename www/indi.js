@@ -109,7 +109,7 @@ function INDIwebsocket(url, container, tabdevice)
 		tabdevice = false;
 	}
 
-	console.log(tabdevice);
+
 	container = (container == "undefined")? "body" : container
 	INDIws = new WebSocket( url );
 	INDIws.devices_container = container
@@ -203,7 +203,7 @@ function AddDevice(devname, container, tabdevice)
 	var devselector = "div.INDIdevice#"+nosp(devname);
 	container = (container==undefined)? 'body':container;
 	var uler = "ul";
-	console.log(tabdevice);
+
 	if($(container).find(uler).length == 0)
 	{
 		$("<ul/>" ).appendTo(container) 
@@ -334,7 +334,7 @@ function newText( INDIvp, appendTo )
 * Desription:
 *	Called when the websocket from the indi webclient
 *	generates or updates an INDI number. If this a 
-*	a never brefore seen INDI number HTML fieldset
+*	a never brefore seen INDI number, an HTML fieldset
 *	element is created with the correct value otherwise
 *	the element's number is updated. 
 *
@@ -349,6 +349,7 @@ function newNumber(INDIvp, appendTo)
 	var vpselector = "fieldset.INDInvp#"+nosp_vpname+"[device='"+INDIvp.device+"']";
 	var nosp_dev = INDIvp.device.replace( " ", "_" );
 	var retn;
+	//we need to create the html
 	if( $(vpselector).length == 0 )
 	{
 		var vphtmldef = $("<fieldset class='INDIvp INDInvp'></fieldset>")
@@ -384,6 +385,7 @@ function newNumber(INDIvp, appendTo)
 				var ro = $('<span/>', {'class':'INumber_ro'}).css({ width:10*len+'px' })
 					
 				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
+				.attr("value", np.value )
 				.keypress(function(event)
 				{
 					
