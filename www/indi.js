@@ -97,13 +97,19 @@ function collect()
 *
 *
 ******************************************/
-function INDIwebsocket(url, container)
+function INDIwebsocket(url, container, tabdevice)
 {
 	if(url == undefined)
 	{
 		url = "ws://swindell:3000"
 	}
 	
+	if (tabdevice == undefined)
+	{
+		tabdevice = false;
+	}
+
+
 	container = (container == "undefined")? "body" : container
 	INDIws = new WebSocket( url );
 	INDIws.devices_container = container
@@ -121,7 +127,7 @@ function INDIwebsocket(url, container)
 		{
 			
 			case "newDevice":
-				AddDevice(data.name, container);
+				AddDevice(data.name, container, tabdevice);
 			break;
 			case "nvp":
 				ele = newNumber( data );
@@ -174,27 +180,68 @@ function INDIwebsocket(url, container)
 }	
 
 
-function AddDevice(devname, container)
+
+
+/************************************************************
+* AddDevice
+* args 
+*	devname-> indi device name, 
+*	container-> the jquery selector string of the containing element
+*	tabdevice -> boolean value if true use jquery tabs to seperate
+*		devices if not but them in divs
+*
+*
+* Description:
+*	When a new device is sent from the INDI driver add it to the 
+* 	webpage either using jquery tabs or simply putting eache device
+*	in its own div. 
+*
+************************************************************/
+
+function AddDevice(devname, container, tabdevice)
 {
 	var devselector = "div.INDIdevice#"+nosp(devname);
 	container = (container==undefined)? 'body':container;
-	var uler = "ul"
+	var uler = "ul";
+
 	if($(container).find(uler).length == 0)
 	{
 		$("<ul/>" ).appendTo(container) 
 	}
 	if( $(container).find( devselector ).length == 0 ) 
 	{
-		var ul = $(container).find(uler);
-		$("<li><a href='#"+nosp(devname)+"'>"+devname+"</a></li>").appendTo( ul );
-		$("<div/>", {id:nosp(devname)}).addClass("INDIdevice").appendTo( container );
-		$(container).tabs();
+		if(tabdevice)
+		{
+			var ul = $(container).find(uler);
+			$("<li><a href='#"+nosp(devname)+"'>"+devname+"</a></li>").appendTo( ul );
+			$("<div/>", {id:nosp(devname)}).addClass("INDIdevice").appendTo( container );
+		
+			$(container).tabs();
+		}
 	}
-	$(container).tabs("refresh")
+	if (tabdevice)
+		$(container).tabs("refresh")
 	return devselector;
 		
 }
 
+/***********************************************************
+* newText 
+* Args INDIvp-> object defining the INDI vector propert, 
+*		appendTo -> jquery selector for which elemebt to 
+*		append the INDivp turned HTML element to.
+*
+* Desription:
+*	Called when the websocket from the indi webclient
+*	generates or updates an INDI text. If this a 
+*	a never brefore seen INDI text HTML fieldset
+*	element is created with the correct value otherwise
+*	the element's text is updated. 
+*
+*
+* Returns: a jquery type selector string. 
+*
+*********************************************************/
 
 function newText( INDIvp, appendTo )
 {
@@ -276,12 +323,33 @@ function newText( INDIvp, appendTo )
 	return vpselector
 }
 
+
+
+/***********************************************************
+* newNumber 
+* Args INDIvp-> object defining the INDI vector propert, 
+*		appendTo -> jquery selector for which elemebt to 
+*		append the INDivp turned HTML element to.
+*
+* Desription:
+*	Called when the websocket from the indi webclient
+*	generates or updates an INDI number. If this a 
+*	a never brefore seen INDI number, an HTML fieldset
+*	element is created with the correct value otherwise
+*	the element's number is updated. 
+*
+*
+* Returns: a jquery type selector string. 
+*
+*********************************************************/
+
 function newNumber(INDIvp, appendTo)
 {
 	var nosp_vpname = INDIvp.name.replace( " ", "_" );
 	var vpselector = "fieldset.INDInvp#"+nosp_vpname+"[device='"+INDIvp.device+"']";
 	var nosp_dev = INDIvp.device.replace( " ", "_" );
 	var retn;
+	//we need to create the html
 	if( $(vpselector).length == 0 )
 	{
 		var vphtmldef = $("<fieldset class='INDIvp INDInvp'></fieldset>")
@@ -317,6 +385,7 @@ function newNumber(INDIvp, appendTo)
 				var ro = $('<span/>', {'class':'INumber_ro'}).css({ width:10*len+'px' })
 					
 				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
+				.attr("value", np.value )
 				.keypress(function(event)
 				{
 					
@@ -358,9 +427,29 @@ function newNumber(INDIvp, appendTo)
 		var npid = nosp_dev+name;
 		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(Math.round(np.value*10000)/10000)
 	});
-
+	// return the jquery selector
 	return vpselector
 }
+/*end newNumber*/
+
+
+/***********************************************************
+* newSwitch 
+* Args INDIvp-> object defining the INDI vector propert, 
+*		appendTo -> jquery selector for which elemebt to 
+*		append the INDivp turned HTML element to.
+*
+* Desription:
+*	Called when the websocket from the indi webclient
+*	generates or updates an INDI switch. If this a 
+*	a never brefore seen INDI switch HTML fieldset
+*	element is created with the correct value otherwise
+*	the element's switch is updated. 
+*
+*
+* Returns: a jquery type selector string. 
+*
+*********************************************************/
 
 function newSwitch( INDIvp, appendTo )
 {
@@ -454,6 +543,25 @@ function newSwitch( INDIvp, appendTo )
 }
 
 
+
+
+/*******************************************************************************
+* sendNewSwitch
+* args: event-> the javascript event that caused the function to be called (normally a click)
+*
+* Description:
+*	This function is called by an html event. The changed state of the indi switch
+* 	is then sent over the websocket to the webclient to update the indi driver. 
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*******************************************************************************/
 function sendNewSwitch(event)
 {
 	var fs = $(event.target).closest(".INDIsvp")
@@ -480,6 +588,20 @@ function sendNewSwitch(event)
 	
 	
 }
+
+
+/*******************************************************************************
+* sendNewNumber
+* args: event-> the javascript event that caused the function to be called (normally a return key)
+*
+* Description:
+*	This function is called by an html event. The changed state of the indi number
+* 	is then sent over the websocket to the webclient to update the indi driver. 
+*
+*
+*
+*******************************************************************************/
+
 function sendNewNumber(event)
 {
 	var fn = $(event.target).parent().parent(".INDInvp");
@@ -505,6 +627,20 @@ function sendNewNumber(event)
 	});
 	INDIws.send(JSON.stringify(out));
 }
+
+
+
+/*******************************************************************************
+* sendNewText
+* args: event-> the javascript event that caused the function to be called (normally a return key)
+*
+* Description:
+*	This function is called by an html event. The changed state of the indi text
+* 	is then sent over the websocket to the webclient to update the indi driver. 
+*
+*
+*
+*******************************************************************************/
 
 function sendNewText(event)
 {
