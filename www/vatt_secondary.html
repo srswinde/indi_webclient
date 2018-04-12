@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html>
 	<head>
-  <script src="//code.jquery.com/jquery-1.12.4.js"></script>
-	<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-	<script src="/indi/indi.js"></script>
+	<meta charset="UTF-8">
+	<Title> VATT Secondary (PI Hexapod)</Title>
+  	<script src="//code.jquery.com/jquery-1.12.4.js"></script>
+	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
+	<script src="jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+	
+	<script src="/indi/indi.js?v=22"></script>
 	<script>
 	function main()
 	{
-		var url="ws://localhost:3000";
-		INDIwebsocket(url, 'body');
+		var url="ws://10.0.1.108:3000";
+		INDIwebsocket(url, 'body', false);
 	}	
 
 	function postProc(INDIvp, ele)
@@ -37,7 +41,7 @@
 	$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
 	}
 	else
-	{
+	{}
 		switch(INDIvp.state)
 		{
 			case(INDISTATE_IDLE ):
@@ -55,19 +59,30 @@
 			default:
 				console.log("idk", data.name, data.state);
 		}
+	
+			//if this structure matches a static element in this page append the html element to that static element
+			oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
+			if( oselector.length==1  )
+			{	
+				
+				return oselector;
+			}
+			//if we are using the tabbed devices
+			else if($(grpselector).length == 1 )
+			{
+				return grpselector;
+			}
+			//otherwise just append it to the body. 
+			else
+			{
+				return "body"
+			}
 	}
-
-
-	return grpselector;
-	}
-
-
 	</script>
-	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/eggplant/jquery-ui.css">
 	<style>
-		.INDIvp label
+		body
 		{
-			margin-right:10px
+			background:aliceblue;
 		}
 		textarea#INDImsg
 		{
@@ -76,134 +91,108 @@
 			right:10px;
 			margin:auto;
 			box-shadow: 5px 5px;
-			display:none;
 		}
-		ul
-		span#General_Info, span#Options, span.INDIgroup#Main_Control > h3, ul.devmenu, .INDIdevice hr, fieldset.INDItvp#cmdv, .INDIvp > legend, .INDIgroup#General_Info
+		#helplink
+		{
+			position:fixed;
+			bottom:10px;
+			left:10px;
+		}
+		#refresh_button
+		{
+			position:fixed;
+			bottom:10px;
+			left:100px;
+		}
+		ul#ui-id-2, fieldset#DRIVER_INFO, fieldset#PosW, fieldset#cmdv, #hexipvp, #CONFIG_PROCESS, legend, #posx, #posy
 		{
 			display:none;
-		}		
-		.INDIsvp#correct, .INDIsvp#ref
-		{
-			display:inline;
 		}
-		span.INDIgroup
+		span.indistatic
 		{
-			margin:10px 10px 10px 10px
+			display:inline-block;
 		}
-		span.INDIgroup#ALL
-		{
-			margin-top:-20px;
-		}
-		span.INDIgroup#Corrections
-		{
-			margin-top:18px;
-		}
-		span.INDIgroup#Main_Control
-		{
-			display:block;	
-			min-height:0px;
-		}
-		span fieldset.INDIsvp#CONNECTION > span
-		{
-			font-size:10px;
-		}
-		.INDIvp
+		fieldset
 		{
 			border:none;
 		}
-		span.INDIgroup
+		
+		#temp > fieldset > span
 		{
-			min-height:150px;
-		}
-		span.INDIgroup#Linear_Position span.INumber_ro, span.INDIgroup#Rotational_Position span.INumber_ro
-
-		{
-			display: inline-block;
-			min-width:75px;
-		}
-
-		span.INDIgroup#Corrections .INDIvp#temp span.INumber_ro
-		{
-			display: inline-block;
-			min-width: 38px;
-		}
-
-		span.INDIgroup#Corrections .INDIvp#el span.INumber_ro
-		{
+			display:block;
 			
-			display: inline-block;
-			min-width: 50px;
 		}
-		span#refresh_button
+		.INumber_ro
 		{
-			position: fixed;
-			display:inline;
-			bottom:20px;
-			left:20px;
-			background-color:grey;
-			font-size:20;
+			display:inline-block;
+			min-width:100px;
+			text-align:center;
 		}
-		li#VATT_Secondary
+		
+		#U > input, #V > input, #Z > input, #tipx, #tipy, #focus
 		{
+		
+			font-size:30px;
+		}
+		#connect
+		{
+			float:right;
 			font-size:10px;
 		}
-		/*#PosX, #PosY, #PosW, #hexipvp
+		#connect > fieldset > span 
+		{
+			display:block;
+		}
+		#focus, #temp
+		{
+			float:left;
+			clear:left;
+		}
+		#tipx, #tipy, #ref, #corr, #err
+		{
+			float:left;
+		}
+		#err
+		{
+			clear:left;
+		}
+
+		#err > fieldset > span >label
 		{
 			display:none;
-		}*/
+		}
+		span.Inumber_ro
+		{
+			font-size:30px;
+		}
 		
-		span.INDIgroup h3
-		{
-			display:none;
-		}
-		#PosV.INDInvp 
-		{
-			position:relative;
-			display:inline;
-			left:140px;
-		}
-		#PosU.INDInvp
-		{
-			position:relative;
-			display:inline;
-			left:-180px;
-		}
-
-		
-		span fieldset#correct.INDIsvp > span, span fieldset#ref.INDIsvp > span
-		{
-			font-size:10px;
-			padding:5px;
-		}
-
-		span fieldset#correct.INDIsvp 
-		{
-			padding:5px
-		}
-		span fieldset#ref.INDIsvp 
-		{
-			padding:5px
-		}
-		.INDIdevice
-		{
-			padding:5px;
-		}
-
-		#helplink
-		{	
-			position: fixed;
-                        display:inline;
-                        bottom:20px;
-                        left:60px;
-		}
 			
 	</style>
 	</head>
 	<body onload="main()">
 		
-		<span id="refresh_button" class="ui-icon ui-icon-arrowrefresh-1-w"></span>
-		<script>$("span#refresh_button").on("click", function(event) {location.reload()})</script>
+
+
+		<span id="connect" indidevice="VATT Secondary" indigroup="Main Control" class="indistatic" indiname="CONNECTION"></span>
+		<span id="posx" indidevice="VATT Secondary" indigroup="Decenter" class="indistatic" indiname="PosX"></span>
+		<span id="posy" indidevice="VATT Secondary" indigroup="Decenter" class="indistatic" indiname="PosY"></span>
+		<span id="focus" indidevice="VATT Secondary" indigroup="Decenter" class="indistatic" indiname="PosZ"></span>
+
+		<span id="tipx" indidevice="VATT Secondary" indigroup="Tip Tilt" class="indistatic" indiname="PosV"></span>
+		<span id="tipy" indidevice="VATT Secondary" indigroup="Tip Tilt" class="indistatic" indiname="PosU"></span>
+
+
+		<span id="temp" indidevice="VATT Secondary" indigroup="Temp El" class="indistatic" indiname="temp"></span>
+
+		<span id="ref" indidevice="VATT Secondary" indigroup="Miscellaneous" class="indistatic" indiname="ref"></span>
+		<span id="corr" indidevice="VATT Secondary" indigroup="Miscellaneous" class="indistatic" indiname="correct"></span>
+		<span id="err" indidevice="VATT Secondary" indigroup="Miscellaneous" class="indistatic" indiname="err"></span>
+
+
+
+
+		<img id="refresh_button" height=20px width=20px src="refresh.png"></img>
+		<script>$("img#refresh_button").on("click", function(event) {location.reload()})</script>
 		<a href="https://lavinia.as.arizona.edu/~tscopewiki/doku.php?id=vatt:hexapod" id="helplink" target="_blank">Help</a>
 		<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
