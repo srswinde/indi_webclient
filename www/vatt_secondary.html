@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html>
 	<head>
-  <script src="//code.jquery.com/jquery-1.12.4.js"></script>
-	<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-	<script src="/indi/indi.js"></script>
+	<meta charset="UTF-8">
+	<Title> VATT Secondary (PI Hexapod)</Title>
+  	<script src="//code.jquery.com/jquery-1.12.4.js"></script>
+	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
+	<script src="jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+	
+	<script src="/indi/indi.js?v=22"></script>
 	<script>
 	function main()
 	{
-		var url="ws://localhost:3000";
+		var url="ws://10.0.1.108:3000";
 		INDIwebsocket(url, 'body', false);
 	}	
 
@@ -37,7 +41,7 @@
 	$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
 	}
 	else
-	{
+	{}
 		switch(INDIvp.state)
 		{
 			case(INDISTATE_IDLE ):
@@ -55,7 +59,7 @@
 			default:
 				console.log("idk", data.name, data.state);
 		}
-	}
+	
 			//if this structure matches a static element in this page append the html element to that static element
 			oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
 			if( oselector.length==1  )
@@ -70,13 +74,16 @@
 			}
 			//otherwise just append it to the body. 
 			else
-				return "body";
+			{
+				return "body"
+			}
 	}
-
-
 	</script>
-	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/eggplant/jquery-ui.css">
 	<style>
+		body
+		{
+			background:aliceblue;
+		}
 		textarea#INDImsg
 		{
 			position:fixed;
@@ -90,6 +97,12 @@
 			position:fixed;
 			bottom:10px;
 			left:10px;
+		}
+		#refresh_button
+		{
+			position:fixed;
+			bottom:10px;
+			left:100px;
 		}
 		ul#ui-id-2, fieldset#DRIVER_INFO, fieldset#PosW, fieldset#cmdv, #hexipvp, #CONFIG_PROCESS, legend, #posx, #posy
 		{
@@ -109,18 +122,18 @@
 			display:block;
 			
 		}
-
-		.inumber_ro
+		.INumber_ro
 		{
 			display:inline-block;
-			min-width:60px;
+			min-width:100px;
+			text-align:center;
 		}
 		
-		.inumber_wo
+		#U > input, #V > input, #Z > input, #tipx, #tipy, #focus
 		{
-			padding:10px;
-		}
 		
+			font-size:30px;
+		}
 		#connect
 		{
 			float:right;
@@ -148,7 +161,10 @@
 		{
 			display:none;
 		}
-		
+		span.Inumber_ro
+		{
+			font-size:30px;
+		}
 		
 			
 	</style>
@@ -175,8 +191,8 @@
 
 
 
-		<span id="refresh_button" class="ui-icon ui-icon-arrowrefresh-1-w"></span>
-		<script>$("span#refresh_button").on("click", function(event) {location.reload()})</script>
+		<img id="refresh_button" height=20px width=20px src="refresh.png"></img>
+		<script>$("img#refresh_button").on("click", function(event) {location.reload()})</script>
 		<a href="https://lavinia.as.arizona.edu/~tscopewiki/doku.php?id=vatt:hexapod" id="helplink" target="_blank">Help</a>
 		<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
