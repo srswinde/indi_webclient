@@ -44,15 +44,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <iostream>
 #include <memory>
 #include <string.h>
-#include <uWS/uWS.h> 
 #include <thread>
-#include "/home/scott/git-clones/json/src/json.hpp"
+//#include "/home/scott/git-clones/json/src/json.hpp"
+#include "nlohmann/json.hpp"
 #include <mutex>
 #include <queue>
 #include <string>
 #include <sstream>
 #include <ostream>
-
+#include <unistd.h>
 using json = nlohmann::json;
 #include "webclient.h"
 #define MYCCD "Simple CCD"
@@ -112,7 +112,6 @@ void WSthread(ComQ *q, ComQ  *devQ)
 	char buff[5000];
 	while (1)
 	{
-		size_t n =-1;
 		std::string input;
 		json inj;
 		
