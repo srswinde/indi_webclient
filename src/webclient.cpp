@@ -583,7 +583,8 @@ int main(int /*argc*/, char ** /*argv*/)
 	camera_client->setQ(&comQ);
 	camera_client->setDevQ(&devQ);
 	
-    camera_client->setServer("localhost", 7624);
+    camera_client->setServer("172.17.0.2", 7624);
+    
 	
 	
     	while(camera_client->connectServer() == false)
@@ -592,12 +593,6 @@ int main(int /*argc*/, char ** /*argv*/)
 	}
 	std::vector< INDI::BaseDevice * >  devs;
 	camera_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
-	for(unsigned int i=0; i<devs.size(); i++ )
-	{
-	}
-    //camera_client->watchDevice(MYCCD);
-
-    //camera_client->setBLOBMode(B_ALSO, MYCCD, nullptr);
 	
 	std::thread t1(WSthread, &comQ, &devQ);
 	comQ.connected = true;
