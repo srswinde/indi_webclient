@@ -575,15 +575,13 @@ void MyClient::Update(json data)
 
 }
 
-int main(int /*argc*/, char ** /*argv*/)
-
+int main(int argc, char ** argv )
 {
 	ComQ comQ;
 	ComQ devQ;
 	camera_client->setQ(&comQ);
 	camera_client->setDevQ(&devQ);
-	
-    camera_client->setServer("172.17.0.2", 7624);
+	camera_client->setServer(argv[1], 7624);
     
 	
 	
