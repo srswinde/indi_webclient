@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
+	 <meta charset="UTF-8">
 	<head>
+
   <script src="//code.jquery.com/jquery-1.12.4.js"></script>
 	<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 	<script src="/indi.js"></script>
 	<script>
 	function main()
 	{
-		var url="ws://swindell:3000";
+		var url="ws://localhost:3000";
 		INDIwebsocket(url, 'body');
 	}	
 
@@ -19,22 +21,23 @@
 
 	if( $(grpselector).length == 0 )
 	{
-	if( $(menuselector).length == 0 )
-	{
-		$("<ul/>", 
+		if( $(menuselector).length == 0 )
 		{
-		}).addClass("devmenu").append(
-		$("<li>")
-			.append($("<a/>").text( "Widget List" ))
-			.append( "<ul></ul>" ) )
-			.prependTo( devselector ).after($("<hr/>")).menu()
-			
-	}
-	$("<li/>").append($("<a/>").css({"white-space":"nowrap"}).on("click", function(event){$(grpselector).toggle()}).text( INDIvp.group )).appendTo( menuselector );
-	$(menuselector).closest("ul.devmenu").menu("refresh");
+			$("<ul/>", 
+			{
+			}).addClass("devmenu").append(
+			$("<li>")
+				.append($("<a/>").text( "Widget List" ))
+				.append( "<ul></ul>" ) )
+				.prependTo( devselector ).after($("<hr/>")).menu()
+				
+		}
+		console.log("Hey ohhh!");
+		$("<li/>").append($("<a/>").css({"white-space":"nowrap"}).on("click", function(event){$(grpselector).toggle()}).text( INDIvp.group )).appendTo( menuselector );
+		$(menuselector).closest("ul.devmenu").menu("refresh");
 
-	$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
-	$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
+		$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
+		$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
 	}
 	else
 	{
