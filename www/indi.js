@@ -119,6 +119,7 @@ function INDIwebsocket(url, container, tabdevice)
 	}
 	INDIws.onmessage = function( event )
 	{
+		console.log("we got a message");
 		var data = JSON.parse( event.data );
 		var ele = '';
 		var newData = false;
@@ -168,8 +169,8 @@ function INDIwebsocket(url, container, tabdevice)
 	}
 	INDIws.onclose = function(event)
 	{
-		//alert("The connection has closed! If possible restart the webserver. This interface will reload when you hit ok.");
-		//location.reload()
+		alert("The connection has closed! If possible restart the webserver. This interface will reload when you hit ok.");
+		location.reload()
 	}
 
 	INDIws.onopen = function(event) 

@@ -3,7 +3,7 @@ services:
         webclient:
                 image: "srswinde/indi_webclient"
                 ports: 
-                  - "3000:3000"
+                        - "3000:3000"
                 environment:
                         - INDISERVER=localhost
                 
@@ -17,14 +17,6 @@ services:
                         - "./www:/usr/share/nginx/html"
                 network_mode: "host"
 
-
-                          #        indi-driver:
-                          #                image: "scott_indi"
-                          #                ports:
-                          #                        - "7624:7624"
-                          #
-                          #
-                          #
         
         indidriver:
                 image: "srswinde/indihex"
