@@ -106,7 +106,7 @@
 		}
 		ul#ui-id-2, fieldset#PosW, fieldset#cmdv, #hexipvp, #CONFIG_PROCESS, legend, #posx, #posy
 		{
-			/*Commenting out this line gives you the 'engineering' GUI.*/
+			/*Commenting out the line below gives you the 'engineering' GUI.*/
 			display:none;
 		}
 		fieldset#DRIVER_INFO
@@ -200,6 +200,8 @@
 		<img id="refresh_button" height=20px width=20px src="refresh.png"></img>
 		<script>$("img#refresh_button").on("click", function(event) {location.reload()})</script>
 		<a href="https://lavinia.as.arizona.edu/~tscopewiki/doku.php?id=vatt:hexapod" id="helplink" target="_blank">Help</a>
+		<div id="note" style="float:left;clear:left;color:#FF8888">
+			When clicking Auto Collimate, hexapod now moves to the previous position not the nominal zero position.</div>
 		<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
 </html>
