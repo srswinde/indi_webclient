@@ -1,216 +1,262 @@
 <!DOCTYPE html>
 <html>
 	<head>
-	<meta charset="UTF-8">
-	<Title> VATT Secondary (PI Hexapod)</Title>
-  	<script src="//code.jquery.com/jquery-1.12.4.js"></script>
-	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
-	<script src="jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+	 <meta charset="UTF-8">
+	<Title> TCSNG</Title>
 	
-	<script src="indi.js?v=22"></script>
+	<link rel="stylesheet" href="indi.css">
+	<script src="//code.jquery.com/jquery-1.12.4.js"></script>
+	<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
+	<script src="/indi.js"></script>
+
 	<script>
 	function main()
 	{
 		var url="ws://localhost:3000";
-		INDIwebsocket(url, 'body', false);
+		INDIwebsocket(url, 'body');
 	}	
 
 	function postProc(INDIvp, ele)
 	{
-	var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
-	var grpselector = devselector+" span.INDIgroup#"+nosp(INDIvp.group);
-	var menuselector = devselector+" ul.devmenu li ul"
+		var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
+		var grpselector = devselector+" span.INDIgroup#"+nosp(INDIvp.group);
+		var menuselector = devselector+" ul.devmenu li ul"
 
-	if( $(grpselector).length == 0 )
-	{
-	if( $(menuselector).length == 0 )
-	{
-		$("<ul/>", 
+		if( $(devselector).length == 0 )
 		{
-		}).addClass("devmenu").append(
-		$("<li>")
-			.append($("<a/>").text( "Widget List" ))
-			.append( "<ul></ul>" ) )
-			.prependTo( devselector ).after($("<hr/>")).menu()
-			
-	}
-	$("<li/>").append($("<a/>").css({"white-space":"nowrap"}).on("click", function(event){$(grpselector).toggle()}).text( INDIvp.group )).appendTo( menuselector );
-	$(menuselector).closest("ul.devmenu").menu("refresh");
+			console.log("creating container")
+			$("<div/>", {id:nosp(INDIvp.device)}).addClass("INDIdevice").appendTo("#body");
+		}
+		if( $(grpselector).length == 0 )
+		{
+		/*
+			if( $(menuselector).length == 0 )
+			{
+				$("<ul/>", 
+				{
+				}).addClass("devmenu").append(
+				$("<li>")
+					.append($("<a/>").text( "Widget List" ))
+					.append( "<ul></ul>" ) )
+					.prependTo( devselector ).after($("<hr/>")).menu()
+			}
+			$("<li/>").append($("<a/>").css({"white-space":"nowrap"}).on("click", function(event){$(grpselector).toggle()}).text( INDIvp.group )).appendTo( menuselector );
+			$(menuselector).closest("ul.devmenu").menu("refresh");
+		*/
 
-	$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
-	$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
-	}
-	else
-	{}
+			$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
+			$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
+		}
+		if(INDIvp.metainfo == "svp")
+			var prop="background-color";
+		else
+			var prop="color"
 		switch(INDIvp.state)
 		{
+
 			case(INDISTATE_IDLE ):
-				$(ele).css('background-color', 'transparent')
+				$(ele).css(prop, 'var( --indistate-idle )')
+				$(ele).find("textarea").css("color", 'var( --indistate-idle )')
 			break;
 			case(INDISTATE_OK ):
-				$(ele).css('background-color', '#008800')
+				$(ele).css(prop, 'var( --indistate-ok )')
+				$(ele).find("textarea").css("color", 'var( --indistate-ok)')
 			break;
 			case(INDISTATE_BUSY ):
-				$(ele).css('background-color', '#bbbb00')
+				$(ele).css(prop, 'var( --indistate-busy )')
+				$(ele).find("textarea").css("color", 'var( --indistate-busy )')
 			break;
 			case(INDISTATE_ALERT ):
-				$(ele).css('background-color', '#880000')
+				$(ele).css(prop, 'var( --indistate-alert )')
+				$(ele).find("textarea").css("color", 'var( --indistate-alert )')
 			break;
 			default:
 				console.log("idk", data.name, data.state);
 		}
-	
-			//if this structure matches a static element in this page append the html element to that static element
-			oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
-			if( oselector.length==1  )
-			{	
-				
-				return oselector;
-			}
-			//if we are using the tabbed devices
-			else if($(grpselector).length == 1 )
-			{
-				return grpselector;
-			}
-			//otherwise just append it to the body. 
-			else
-			{
-				return "body"
-			}
+
+
+		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
+
+		if ($(oselector).length!=0)
+		{
+			var rtn = oselector;
+		}
+		else
+		{
+			var rtn = grpselector;
+		}
+		return rtn
 	}
+
+	$( function() 
+	{
+		$("#tabs").tabs()
+	} );
+	$( function() 
+	{
+		$("#tabs").resizable();
+	} );
+
+
 	</script>
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/vader/jquery-ui.css">
 	<style>
-	
-		body
-		{
-			background:aliceblue;
-		}
-		textarea#INDImsg
-		{
-			position:fixed;
-			bottom:10px;
-			right:10px;
-			margin:auto;
-			box-shadow: 5px 5px;
-		}
-		#helplink
-		{
-			position:fixed;
-			bottom:10px;
-			left:10px;
-		}
-		#refresh_button
-		{
-			position:fixed;
-			bottom:10px;
-			left:100px;
-		}
+	fieldset#CONNECTION
+	{
+		position:fixed;
+		bottom:20px;
+		left:20px;
+	}
 
-		fieldset#CONNECTION
-		{
-			position:fixed;
-			right:10px;
+	span#Telemetry
+	{
+		position:fixed;
+		top:80px;
+		right:10px;
+		max-width:30%;
 
-		}
-		fieldset
-		{
-			display:inline-block;
-		}
-		fieldset#CONNECTION > span 
-		{
-			display:inline-block;
-		}
+	}
 
-		fieldset#stTELEM
-		{
-			position:fixed;
-			right:10px;
-			top:80px;
-		}
-		fieldset#stTELEM > span.ITextspan
-		{
-			display:block;
-		}
-		fieldset#stTELEM > span.ITextspan > label
-		{
-			display:inline-block;
-			min-width:200px;
-		}
-		textarea.IText_ro
-		{
-			background:transparent;
-			resize:none;
-			border:none;
-		}
-		span.INumberspan, span.ISwitchspan, span.ITextspan
-		{
-			display:block;
-		}
-
-		fieldset#eqTELEM
-		{
-			position:fixed;
-			top:400px;
-			right:10px;
-
-		}
-		fieldset#eqTELEM > span.ITextspan
-		{
-			display:block;
-		}
-		fieldset#eqTELEM > span.ITextspan > label
-		{
-			display:inline-block;
-                        min-width:200px;
-		}
-		fieldset#eqTELEM > span.ITextspan > textarea.IText_ro
-		{
-			background:transparent;
-			width:200px;
-		}
-		#nogo
-		{
-			positiion:absolute;
-			right:20px;
-			width:200px;
-
-		}
-
-
-			
-	</style>
-	</head>
-	<body onload="main()">
+	span#Telemetry fieldset > span.ITextspan
+	{
+		display:block;
 		
 
-<!--
-		<span id="connect" indidevice="VATT Secondary" indigroup="Main Control" class="indistatic" indiname="CONNECTION"></span>
-		<span id="posx" indidevice="VATT Secondary" indigroup="Decenter" class="indistatic" indiname="PosX"></span>
-		<span id="posy" indidevice="VATT Secondary" indigroup="Decenter" class="indistatic" indiname="PosY"></span>
-		<span id="focus" indidevice="VATT Secondary" indigroup="Decenter" class="indistatic" indiname="PosZ"></span>
+	}
+	fieldset#stTELEM
+	{
+		display:inline-block;
+		max-width:400px;
+	}
+	fieldset#stTELEM > span.ITextspan > label
+	{
+		display:inline-block;
+		min-width:150px;
+		padding-bottom:10px;
+	}
+	fieldset#stTELEM > span.ITextspan  textarea
+	{
+		max-width:100px;
+		font-size:0.9em;
+	}
+	fieldset#ACTIONS
+	{
+		max-width:200px;
+	}
+	span#Goto_Functions > fieldset
+	{
+	}
+	span#Goto_Functions > fieldset > span
+	{
+	}
+	.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button	
+	{
+		font-size:0.6em;
+	}
+	#Goto_Functions label, #Corrections label, #PEC label, #TLE label
+	{
+		font-size:0.6em;
+		font-weight:bold;
+		white-space:nowrap;
+	}
+	span#Telemetry #ACTIONS label
+	{
+		font-size:0.6em;
+	}
+	span.INumberspan
+	{
+		padding-right:10px;
+	}
+	#REQ___VARS
+	{
+		display:None;
 
-		<span id="tipx" indidevice="VATT Secondary" indigroup="Tip Tilt" class="indistatic" indiname="PosV"></span>
-		<span id="tipy" indidevice="VATT Secondary" indigroup="Tip Tilt" class="indistatic" indiname="PosU"></span>
+	}
+	.INDIgroup
+	{
+		margin-right:30px;
+	}
 
-
-		<span id="temp" indidevice="VATT Secondary" indigroup="Temp El" class="indistatic" indiname="temp"></span>
-
-		<span id="ref" indidevice="VATT Secondary" indigroup="Miscellaneous" class="indistatic" indiname="ref"></span>
-		<span id="corr" indidevice="VATT Secondary" indigroup="Miscellaneous" class="indistatic" indiname="correct"></span>
-		<span id="err" indidevice="VATT Secondary" indigroup="Miscellaneous" class="indistatic" indiname="err"></span>
-
-
-
-
-		<img id="refresh_button" height=20px width=20px src="refresh.png"></img>
-		<script>$("img#refresh_button").on("click", function(event) {location.reload()})</script>
-		<a href="https://lavinia.as.arizona.edu/~tscopewiki/doku.php?id=vatt:hexapod" id="helplink" target="_blank">Help</a>
-		<div id="note" style="float:left;clear:left;color:#FF8888">
-			When clicking Auto Collimate, hexapod now moves to the previous position not the nominal zero position.</div>
-		<textarea rows=3 cols=75 id="INDImsg"></textarea>
-		-->
-	<span id="nogo">
-	</span>
 	
+	
+
+	fieldset#eqTELEM > span#div,  
+	fieldset#eqTELEM > span#desc, 
+	fieldset#eqTELEM > span#label,
+	fieldset#eqTELEM > span#nxt,
+	fieldset#eqTELEM > span#com,
+	fieldset#eqTELEM > span#cur,
+	fieldset#eqTELEM > span#off
+	{
+		display:None;
+	}
+
+	fieldset#eqTELEM label
+	{
+		display:inline-block;
+		min-width:100px;
+	}
+	span#cur textarea, span#nxt textarea, span#com textarea
+	{
+		overflow:hidden;
+	}
+
+	span#cur label, span#nxt label, span#com label
+	{
+		display:inline-block;
+		min-width:7em;
+	}
+	body
+	{
+		background:#121212;
+	}
+	legend
+	{
+		color:white;
+	}
+	div#SNOOPER
+	{
+		padding-bottom:10px;
+		
+	}
+	fieldset
+	{
+		display:inline;
+	}
+	div#SNOOPER h3, span#Telemetry h3
+	{
+		display:None;
+		
+	}
+	div#SNOOPER fieldset .INumber_ro
+	{
+		font-size:1.5em;
+	}
+	#tabs
+	{
+		height:600px;
+		width:65%;
+		overflow:scroll;
+		overflow-x:hidden;
+	}
+	</style>
+	</head>
+	<body onload="main()" >
+		<div id="SNOOPER" class="INDIdevice"></div>
+		<div id="tcont">
+
+		<div id="tabs" >
+			  <ul>
+				<li><a href="#TCS-NG-INDI">Telescope</a></li>
+				<li><a href="#DOME-NG-INDI">Dome</a></li>
+				<li><a href="#FOCUS-NG-INDI">FOCUS</a></li>
+			</ul>
+			<div id="TCS-NG-INDI" class="INDIdevice"></div>
+			<div id="DOME-NG-INDI" class="INDIdevice"></div>
+			<div id="FOCUS-NG-INDI" class="INDIdevice"></div>
+		</div>
+		</div>
+		<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
 </html>

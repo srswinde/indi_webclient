@@ -119,14 +119,12 @@ function INDIwebsocket(url, container, tabdevice)
 	}
 	INDIws.onmessage = function( event )
 	{
-		console.log("we got a message");
 		var data = JSON.parse( event.data );
 		var ele = '';
 		var newData = false;
 		container = this.devices_container;
 		switch (data.metainfo)
 		{
-			
 			case "newDevice":
 				AddDevice(data.name, container, tabdevice);
 			break;
@@ -146,9 +144,8 @@ function INDIwebsocket(url, container, tabdevice)
 			case "msg":
 				var msgselector = "textarea#INDImsg";
 				var msgarea = $(msgselector);
-				
 				msgarea.text( data.msg+'\n'+msgarea.text() );
-			
+
 			break;
 			default:
 				console.log("IDK", data.metainfo);
@@ -426,7 +423,10 @@ function newNumber(INDIvp, appendTo)
 		var label = np.label.replace(" ", "_")
 		var name = np.name.replace(' ', '_');
 		var npid = nosp_dev+name;
-		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(Math.round(np.value*10000)/10000)
+		newvalue= formatNumber(np.value, np.format)
+		//$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(Math.round(np.value*10000)/10000)
+		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(newvalue)
+
 	});
 	// return the jquery selector
 	return vpselector
