@@ -2,7 +2,7 @@ src=src
 include=$(src)
 CC=g++
 CFLAGS=-std=c++11 -Wall
-LIBS=-lindiclient -lz -lnova -lpthread -lssl
+LIBS=-lindiclient -lz -lnova -lpthread 
 EXE=webclient
 
 all: clean webclient

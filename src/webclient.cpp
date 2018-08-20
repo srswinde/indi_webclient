@@ -536,7 +536,7 @@ int main(int argc, char ** argv )
 		{
 			web_client->Update(json::parse(driverQ.pop()));
 		}
-		usleep( (int) 5e4 );
+		usleep( (int) 1e5 );
 	}
 	webQ.connected = false;
 	test=false;
