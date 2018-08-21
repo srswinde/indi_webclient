@@ -101,7 +101,7 @@ function INDIwebsocket(url, container, tabdevice)
 {
 	if(url == undefined)
 	{
-		url = "ws://swindell:3000"
+		url = "ws://indiserver:3000"
 	}
 	
 	if (tabdevice == undefined)
