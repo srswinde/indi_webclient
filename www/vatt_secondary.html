@@ -7,11 +7,12 @@
 	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
 	<script src="jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
 	
-	<script src="indi.js?v=22"></script>
+	<script src="indi/indi.js?v=22"></script>
 	<script>
 	function main()
 	{
-		var url="ws://localhost:3000";
+		var url="ws://10.0.1.108:3000";
+		console.log("making websocket");
 		INDIwebsocket(url, 'body', false);
 	}	
 
