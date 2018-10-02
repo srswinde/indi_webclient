@@ -6,4 +6,4 @@ WORKDIR webclient
 ADD . /webclient
 
 
-ENTRYPOINT /webclient/websocketd --address=127.0.0.1 --port=3000 --devconsole /webclient/webclient $INDISERVER
+CMD /webclient/websocketd --address=127.0.0.1 --port=3000 --devconsole /webclient/webclient $INDISERVER
