@@ -1,72 +1,94 @@
 <!DOCTYPE html>
 <html>
 	<head>
-  <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+	 <meta charset="UTF-8">
+	<Title> INDI client example</Title>
+	
+	<link rel="stylesheet" href="indi.css">
+	<script src="//code.jquery.com/jquery-1.12.4.js"></script>
 	<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
 	<script src="/indi.js"></script>
+
 	<script>
 	function main()
 	{
-		var url="ws://swindell:3000";
+		var url="ws://localhost:3000";
 		INDIwebsocket(url, 'body');
 	}	
 
 	function postProc(INDIvp, ele)
 	{
-	var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
-	var grpselector = devselector+" span.INDIgroup#"+nosp(INDIvp.group);
-	var menuselector = devselector+" ul.devmenu li ul"
+		var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
+		var grpselector = devselector+" span.INDIgroup#"+nosp(INDIvp.group);
+		var menuselector = devselector+" ul.devmenu li ul"
 
-	if( $(grpselector).length == 0 )
-	{
-	if( $(menuselector).length == 0 )
-	{
-		$("<ul/>", 
+		if( $(devselector).length == 0 )
 		{
-		}).addClass("devmenu").append(
-		$("<li>")
-			.append($("<a/>").text( "Widget List" ))
-			.append( "<ul></ul>" ) )
-			.prependTo( devselector ).after($("<hr/>")).menu()
-			
-	}
-	$("<li/>").append($("<a/>").css({"white-space":"nowrap"}).on("click", function(event){$(grpselector).toggle()}).text( INDIvp.group )).appendTo( menuselector );
-	$(menuselector).closest("ul.devmenu").menu("refresh");
-
-	$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
-	$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
-	}
-	else
-	{
+			console.log("creating dev")
+			$("<div/>", {id:nosp(INDIvp.device)}).addClass("INDIdevice").appendTo("body");
+		}
+		if( $(grpselector).length == 0 )
+		{
+		/*
+			if( $(menuselector).length == 0 )
+			{
+				$("<ul/>", 
+				{
+				}).addClass("devmenu").append(
+				$("<li>")
+					.append($("<a/>").text( "Widget List" ))
+					.append( "<ul></ul>" ) )
+					.prependTo( devselector ).after($("<hr/>")).menu()
+			}
+			$("<li/>").append($("<a/>").css({"white-space":"nowrap"}).on("click", function(event){$(grpselector).toggle()}).text( INDIvp.group )).appendTo( menuselector );
+			$(menuselector).closest("ul.devmenu").menu("refresh");
+		*/
+			$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
+			$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
+		}
 		switch(INDIvp.state)
 		{
 			case(INDISTATE_IDLE ):
-				$(ele).css('background-color', 'transparent')
+				$(ele).css('background-color', 'var( --indistate-idle )')
 			break;
 			case(INDISTATE_OK ):
-				$(ele).css('background-color', '#008800')
+				$(ele).css('background-color', 'var( --indistate-ok )')
 			break;
 			case(INDISTATE_BUSY ):
-				$(ele).css('background-color', '#bbbb00')
+				$(ele).css('background-color', 'var( --indistate-busy )')
 			break;
 			case(INDISTATE_ALERT ):
-				$(ele).css('background-color', '#880000')
+				$(ele).css('background-color', 'var( --indistate-busy )')
 			break;
 			default:
 				console.log("idk", data.name, data.state);
 		}
-	}
 
 
-	return grpselector;
-	}
+		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
 
+		if ($(oselector).length!=0)
+		{
+			var rtn = oselector;
+		}
+		else
+		{
+			var rtn = grpselector;
+		}
+
+		return grpselector
+	}	
+
+	$( function() 
+	{
+		$("#tabs").tabs()
+	} );
 
 	</script>
 	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/eggplant/jquery-ui.css">
 	</head>
 	<body onload="main()">
-		
-
+		<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
 </html>

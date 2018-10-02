@@ -1,70 +1,25 @@
-#if 0
-Simple Client Tutorial
-Demonstration of libindi v0.7 capabilities.
-
-Copyright (C) 2010 Jasem Mutlaq (mutlaqja@ikarustech.com)
-
-This library is free software;
-you can redistribute it and / or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation;
-either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY;
-without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library;
-if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110 - 1301  USA
-
-#endif
-
-/** \file tutorial_client.cpp
-    \brief Construct a basic INDI client that demonstrates INDI::Client capabilities. This client must be used with tutorial_three device "Simple CCD".
-    \author Jasem Mutlaq
-
-    \example tutorial_client.cpp
-    Construct a basic INDI client that demonstrates INDI::Client capabilities. This client must be used with tutorial_three device "Simple CCD".
-    To run the example, you must first run tutorial_three:
-    \code indiserver tutorial_three \endcode
-    Then in another terminal, run the client:
-    \code tutorial_client \endcode
-    The client will connect to the CCD driver and attempts to change the CCD temperature.
-*/
-
-
 #include "basedevice.h"
 #include "/usr/include/libindi/indicom.h"
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <string.h>
-#include <uWS/uWS.h> 
 #include <thread>
-#include "/home/scott/git-clones/json/src/json.hpp"
+#include "nlohmann/json.hpp"
 #include <mutex>
 #include <queue>
 #include <string>
 #include <sstream>
 #include <ostream>
-
+#include <unistd.h>
 using json = nlohmann::json;
 #include "webclient.h"
-#define MYCCD "Simple CCD"
 bool test = true;
 
 /* Our client auto pointer */
-std::unique_ptr<MyClient> camera_client(new MyClient());
+std::unique_ptr<MyClient> web_client(new MyClient());
 
 
-
-
-		
 void ComQ::push(json *data)
 {
 	counter++;
@@ -94,7 +49,7 @@ std::string ComQ::pop()
  * WSthread
  * Args:
  *      q-> queue that handles json data form indidriver to webpage
- *      devQ -> queue that handles json data from webpage to indidriver
+ *      driverQ -> queue that handles json data from webpage to indidriver
  * Description:
  *      THis is the thread that handles the websocket communiccation
  *      between this program and the webpage. 
@@ -105,14 +60,13 @@ std::string ComQ::pop()
  *
  *
  * ***********************************************************************/
-void WSthread(ComQ *q, ComQ  *devQ)
+void WSthread(ComQ *websocQ, ComQ  *driverQ)
 {
 
 
 	char buff[5000];
-	while (1)
+	while (websocQ->connected)
 	{
-		size_t n =-1;
 		std::string input;
 		json inj;
 		
@@ -130,15 +84,18 @@ void WSthread(ComQ *q, ComQ  *devQ)
 		}
 
 		if(inj["task"] != "getProperties")
-		devQ->push(&inj);
+			driverQ->push(&inj);
+		else
+			
 
-		while(q->size()>0)
+		while(websocQ->size()>0)
 		{
-			if(q->size() > 0)	
+			if(websocQ->size() > 0)	
 			{
-				strcpy( buff, q->front().c_str() );
+				
+				strcpy( buff, websocQ->front().c_str() );
 				std::cout << buff << std::endl;
-				q->pop( );
+				websocQ->pop( );
 			}
 			usleep( (int) 250);
 		}
@@ -245,26 +202,8 @@ void MyClient::newProperty(INDI::Property *property)
 		default:
 			std::cout << "IDK" << std::endl;
 	}
-	/*
-	std::cout << "New property name  "<< property->getName() << std::endl;
 	
-    //connectDevice(property->getDeviceName());
-	//watchDevice( property->getDeviceName() );
-    if ( !strcmp(property->getName(), "CONNECTION") )
-    {
-        connectDevice(property->getDeviceName());
-        return;
-    }
 
-    if (!strcmp(property->getDeviceName(), MYCCD) && !strcmp(property->getName(), "CCD_TEMPERATURE"))
-    {
-        if (ccd_simulator->isConnected())
-        {
-            IDLog("CCD is connected. Setting temperature to -20 C.\n");
-            setTemperature();
-        }
-        return;
-    }*/
 }
 
 
@@ -570,46 +509,36 @@ void MyClient::Update(json data)
 			strcpy(tp->text, text.c_str());
 		}
 		sendNewText(tvp);
-		
-
 	}
-
 }
 
-int main(int /*argc*/, char ** /*argv*/)
-
+int main(int argc, char ** argv )
 {
-	ComQ comQ;
-	ComQ devQ;
-	camera_client->setQ(&comQ);
-	camera_client->setDevQ(&devQ);
+	ComQ webQ; //Q for communicating with web page
+	ComQ driverQ;//Q for communicating with indiserver
+	web_client->setQ(&webQ);
+	web_client->setDevQ(&driverQ);
+	web_client->setServer(argv[1], 7624);
+    
 	
-    camera_client->setServer("localhost", 7624);
-	
-	
-    	while(camera_client->connectServer() == false)
+    	while(web_client->connectServer() == false)
 	{
 		usleep(2e6);
 	}
 	std::vector< INDI::BaseDevice * >  devs;
-	camera_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
-	for(unsigned int i=0; i<devs.size(); i++ )
-	{
-	}
-    //camera_client->watchDevice(MYCCD);
-
-    //camera_client->setBLOBMode(B_ALSO, MYCCD, nullptr);
+	web_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
 	
-	std::thread t1(WSthread, &comQ, &devQ);
-	comQ.connected = true;
-	while(comQ.connected)
+	std::thread t1(WSthread, &webQ, &driverQ);
+	webQ.connected = true;
+	while(webQ.connected)
 	{
-		if(devQ.size() !=0)
+		if(driverQ.size() !=0)
 		{
-			camera_client->Update(json::parse(devQ.pop()));
+			web_client->Update(json::parse(driverQ.pop()));
 		}
-		usleep( (int) 5e5 );
+		usleep( (int) 1e5 );
 	}
+	webQ.connected = false;
 	test=false;
 	t1.join();
 }

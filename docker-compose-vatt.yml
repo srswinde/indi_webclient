@@ -1,0 +1,26 @@
+version: '2'
+services:
+        webclient:
+                image: "srswinde/indi_webclient"
+                ports: 
+                        - "3000:3000"
+                environment:
+                        - INDISERVER=10.0.1.108
+                depends_on:
+                        - "indiserver"
+                command: sleep 1000
+                
+
+        nginx-server:
+                image: "nginx"
+                ports:
+                        - "4001:80"
+                volumes:
+                        - "./www:/usr/share/nginx/html"
+
+        
+        indiserver:
+                image: "srswinde/indihex"
+                ports:
+                        - "7624:7624"
+                command: /usr/bin/indiserver -v /src/sdev

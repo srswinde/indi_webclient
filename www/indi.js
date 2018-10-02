@@ -101,7 +101,7 @@ function INDIwebsocket(url, container, tabdevice)
 {
 	if(url == undefined)
 	{
-		url = "ws://swindell:3000"
+		url = "ws://indiserver:3000"
 	}
 	
 	if (tabdevice == undefined)
@@ -125,7 +125,6 @@ function INDIwebsocket(url, container, tabdevice)
 		container = this.devices_container;
 		switch (data.metainfo)
 		{
-			
 			case "newDevice":
 				AddDevice(data.name, container, tabdevice);
 			break;
@@ -145,9 +144,8 @@ function INDIwebsocket(url, container, tabdevice)
 			case "msg":
 				var msgselector = "textarea#INDImsg";
 				var msgarea = $(msgselector);
-				
 				msgarea.text( data.msg+'\n'+msgarea.text() );
-			
+
 			break;
 			default:
 				console.log("IDK", data.metainfo);
@@ -168,8 +166,8 @@ function INDIwebsocket(url, container, tabdevice)
 	}
 	INDIws.onclose = function(event)
 	{
-		//alert("The connection has closed! If possible restart the webserver. This interface will reload when you hit ok.");
-		//location.reload()
+		alert("The connection has closed! If possible restart the webserver. This interface will reload when you hit ok.");
+		location.reload()
 	}
 
 	INDIws.onopen = function(event) 
@@ -425,7 +423,10 @@ function newNumber(INDIvp, appendTo)
 		var label = np.label.replace(" ", "_")
 		var name = np.name.replace(' ', '_');
 		var npid = nosp_dev+name;
-		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(Math.round(np.value*10000)/10000)
+		newvalue= formatNumber(np.value, np.format)
+		//$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(Math.round(np.value*10000)/10000)
+		$(vpselector).find("span.INumberspan[INDIname='"+np.name+"']  span.INumber_ro").text(newvalue)
+
 	});
 	// return the jquery selector
 	return vpselector
