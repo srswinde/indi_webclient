@@ -1,7 +1,7 @@
 version: '2'
 services:
         webclient:
-                image: "srswinde/indi_webclient:latest"
+                image: "srswinde/indi_webclient:test"
                 ports: 
                         - "3000:3000"
                 environment:
@@ -19,10 +19,19 @@ services:
                         - "./www:/usr/share/nginx/html"
         
         indiserver:
+                # stable was a version with a bug on 
+                # the auto collimation routine
+                # We should move the latest 
+                # to stable when we are sure the
+                # bug fix doesn't cause anymore issues
+                # -Scott May 2019
+                
+                
+                #                image:  "srswinde/indihex:stable"
                 image: "srswinde/indihex:latest"
                 ports:
                         - "7624:7624"
-                #command: /usr/bin/indiserver -v /src/sdev
+                command: /usr/bin/indiserver -v /driver/build/sdev
                 network_mode: host
 
 
