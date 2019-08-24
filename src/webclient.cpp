@@ -519,7 +519,7 @@ int main(int argc, char ** argv )
 	web_client->setQ(&webQ);
 	web_client->setDevQ(&driverQ);
 	web_client->setServer(argv[1], 7624);
-    
+    web_client->watchProperty("TCS-NG-INDI", "stTELEM");
 	
     	while(web_client->connectServer() == false)
 	{
