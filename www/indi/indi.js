@@ -72,9 +72,9 @@ function collect()
 	}
 	catch(err)
 	{
-		console.log("The error is ", err);
+		//console.log("The error is ", err);
 	}
-	setTimeout( collect, 100);
+	setTimeout( collect, 1000);
 }
 
 
@@ -120,7 +120,7 @@ function INDIwebsocket(url, container, tabdevice)
 	INDIws.onmessage = function( event )
 	{
 		var data = JSON.parse( event.data );
-		console.log("dev is ", data.device);
+		//console.log("dev is ", data.device);
 		var ele = '';
 		var newData = false;
 		container = this.devices_container;
@@ -149,7 +149,7 @@ function INDIwebsocket(url, container, tabdevice)
 
 			break;
 			default:
-				console.log("IDK", data.metainfo);
+				//console.log("IDK", data.metainfo);
 		}
 		if(newData)
 		{
@@ -170,7 +170,7 @@ function INDIwebsocket(url, container, tabdevice)
 		//alert("The connection has closed! If possible restart the webserver. This interface will reload when you hit ok.");
 		//
 		//location.reload()
-		console.log(event, "websocket closed");
+		//console.log(event, "websocket closed");
 	}
 
 	INDIws.onopen = function(event) 
@@ -662,7 +662,7 @@ function sendNewText(event)
 
 	ft.find("textarea.IText_wo").each(function( ii, tp ) 
 	{
-		console.log($(IText).closest(".IText"));
+		//console.log($(IText).closest(".IText"));
 		out.newText.tp.push(
 		{
 			"name":$(IText).closest("span.ITextspan").attr("INDIname"),

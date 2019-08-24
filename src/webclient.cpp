@@ -519,6 +519,8 @@ int main(int argc, char ** argv )
 	web_client->setQ(&webQ);
 	web_client->setDevQ(&driverQ);
 	web_client->setServer(argv[1], 7624);
+	web_client->watchProperty("TCS-NG-INDI", "stTELEM");
+	web_client->watchProperty("TCS-NG-INDI", "SERVICE_POSITIONS");
     
 	
     	while(web_client->connectServer() == false)
@@ -529,6 +531,7 @@ int main(int argc, char ** argv )
 	web_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
 	
 	std::thread t1(WSthread, &webQ, &driverQ);
+
 	webQ.connected = true;
 	while(webQ.connected)
 	{
