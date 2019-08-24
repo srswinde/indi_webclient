@@ -13,7 +13,8 @@
 	<script>
 	function main()
 	{
-		var url="ws://bigpop:3000";
+		var host = location.host.split(":")[0];
+		var url = "ws://"+host+":3000";
 		INDIwebsocket(url, 'body');
 	}	
 
