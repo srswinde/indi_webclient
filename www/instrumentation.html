@@ -26,7 +26,7 @@
 
 		if( $(devselector).length == 0 )
 		{
-			console.log("creating container")
+			//console.log("creating container")
 			$("<div/>", {id:nosp(INDIvp.device)}).addClass("INDIdevice").appendTo("#body");
 		}
 		if( $(grpselector).length == 0 )
@@ -73,26 +73,30 @@
 				$(ele).find("textarea").css("color", 'var( --indistate-alert )')
 			break;
 			default:
-				console.log("idk", data.name, data.state);
+				//console.log("idk", data.name, data.state);
 		}
 
 
 		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
 
-		if ($(oselector).length!=0)
+		if ($(oselector).length==1)
 		{
 			var rtn = oselector;
 		}
-		else
+		else if($(grpselector).length == 1 )
 		{
 			var rtn = grpselector;
+		}
+		else
+		{
+			return "body";
 		}
 		return rtn
 	}
 
 	$( function() 
 	{
-		$("#tabs").tabs()
+		$("#tabs").tabs();
 	} );
 	$( function() 
 	{
@@ -109,6 +113,7 @@
 		bottom:20px;
 		left:20px;
 	}
+	/*
 	label, legend, .INDIgroup h3
 	{
 		color:lightblue;
@@ -244,11 +249,45 @@
 		width:65%;
 		overflow:scroll;
 		overflow-x:hidden;
+	}*/	
+	
+	fieldset
+	{
+		display:None;
+	}
+	span#COORDINATES
+	{
+		display:None;
+	}
+	fieldset#SERVICE_POSITIONS, fieldset#stTELEM[device=TCS-NG-INDI], fieldset#ACTIONS
+	{
+		display:inline-block;
+	} 
+	fieldset#stTELEM > span, fieldset#ACTIONS > span
+	{
+		display:None;
+	}
+	fieldset#stTELEM > span#alt, fieldset#stTELEM > span#az, fieldset#ACTIONS > span#CANCEL, fieldset#ACTIONS > span#ENABLE
+	{
+		display:inline;
+	}
+	fieldset#stTELEM > span> textarea
+	{
+		font-size:20px;
+		width:85px;
+		margin:0px;
+		overflow:hidden;
+	}
+	body
+	{
+		padding:20px;
+		background-color:#222222;
 	}
 	</style>
 	</head>
 	<body onload="main()" >
 		<div id="SNOOPER" class="INDIdevice"></div>
+		<!--
 		<div id="tcont">
 
 		<div id="tabs" >
@@ -262,6 +301,7 @@
 			<div id="FOCUS-NG-INDI" class="INDIdevice"></div>
 		</div>
 		</div>
-		<textarea rows=3 cols=75 id="INDImsg"></textarea>
+		-->
+		<!--<textarea rows=3 cols=75 id="INDImsg"></textarea>-->
 	</body>
 </html>

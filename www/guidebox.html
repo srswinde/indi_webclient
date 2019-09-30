@@ -2,11 +2,15 @@
 <html>
 	<head>
 	 <meta charset="UTF-8">
-	<Title> TCSNG</Title>
+	<script src="plotly/plotly-latest.min.js"></script>
+
+	<Title> Guide Box</Title>
 	
 	<link rel="stylesheet" href="indi.css">
 	<script src="//code.jquery.com/jquery-1.12.4.js"></script>
 	<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src=""></script>
 	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
 	<script src="indi/indi.js"></script>
 
@@ -14,8 +18,10 @@
 	function main()
 	{
 		var host = location.host.split(":")[0];
-		var url = "ws://"+host+":3000";
+		var url="ws://"+host+":3000";
 		INDIwebsocket(url, 'body');
+		buildxy();
+
 	}	
 
 	function postProc(INDIvp, ele)
@@ -26,7 +32,6 @@
 
 		if( $(devselector).length == 0 )
 		{
-			console.log("creating container")
 			$("<div/>", {id:nosp(INDIvp.device)}).addClass("INDIdevice").appendTo("#body");
 		}
 		if( $(grpselector).length == 0 )
@@ -49,43 +54,20 @@
 			$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
 			$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
 		}
-		if(INDIvp.metainfo == "svp")
-			var prop="background-color";
-		else
-			var prop="color"
-		switch(INDIvp.state)
-		{
-
-			case(INDISTATE_IDLE ):
-				$(ele).css(prop, 'var( --indistate-idle )')
-				$(ele).find("textarea").css("color", 'var( --indistate-idle )')
-			break;
-			case(INDISTATE_OK ):
-				$(ele).css(prop, 'var( --indistate-ok )')
-				$(ele).find("textarea").css("color", 'var( --indistate-ok)')
-			break;
-			case(INDISTATE_BUSY ):
-				$(ele).css(prop, 'var( --indistate-busy )')
-				$(ele).find("textarea").css("color", 'var( --indistate-busy )')
-			break;
-			case(INDISTATE_ALERT ):
-				$(ele).css(prop, 'var( --indistate-alert )')
-				$(ele).find("textarea").css("color", 'var( --indistate-alert )')
-			break;
-			default:
-				console.log("idk", data.name, data.state);
-		}
-
-
+		
 		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
 
-		if ($(oselector).length!=0)
+		if ($(oselector).length==1)
 		{
 			var rtn = oselector;
 		}
-		else
+		else if($(grpselector).length == 1 )
 		{
 			var rtn = grpselector;
+		}
+		else
+		{
+			var rtn = "body"
 		}
 		return rtn
 	}
@@ -99,6 +81,54 @@
 		$("#tabs").resizable();
 	} );
 
+	function buildxy()
+	{
+		d3=Plotly.d3;
+		line1 = [{
+			x: [-90, -90, 90, 90, 50, 50, -60, -60, -90],
+			y: [-10, 85, 85, -10, -10, 45, 45, -10, -10], 
+			type: "line",
+			hoverinfo: "none"
+		}];
+
+		layout = {
+			margin: { t: 0 },
+			xaxis: {range:[-100,100], fixedrange: true},
+			yaxis: {range:[-70,120], fixedrange: true},
+			paper_bgcolor:'rgba(0,0,0,0)',
+            plot_bgcolor:'rgba(0,0,0,0)',
+
+		};
+		
+
+		UMIRROR = document.getElementById('xypos');
+		Plotly.plot( UMIRROR, line1, layout);		
+		var xaxis = UMIRROR._fullLayout.xaxis;
+		var yaxis = UMIRROR._fullLayout.yaxis;
+		var l = UMIRROR._fullLayout.margin.l;
+		var t = UMIRROR._fullLayout.margin.t;
+
+		d3.select("#xypos").on("contextmenu", function() {
+				d3.event.preventDefault()
+				var point = d3.mouse(this);
+				p = {x: point[0]-(180), y: 100-point[1] };
+				$("span#OFFSET_X.INumberspan > input.INumber_wo").val(parseInt(p.x));
+				$("span#OFFSET_Y.INumberspan > input.INumber_wo").val(parseInt(p.y));
+				console.log(point)
+			} )
+			
+			
+			
+			UMIRROR.addEventListener("mousemove", function(evt)
+			{
+				var x = xaxis.p2c(evt.x - l);
+				var y = yaxis.p2c(evt.y - t);
+				$("span#OFFSET_X.INumberspan > input.INumber_wo").val(parseInt(x));
+				$("span#OFFSET_Y.INumberspan > input.INumber_wo").val(parseInt(y));
+
+			})
+
+	}
 
 	</script>
 	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/vader/jquery-ui.css">
@@ -106,17 +136,13 @@
 	fieldset#CONNECTION
 	{
 		position:fixed;
-		bottom:20px;
-		left:20px;
+		bottom:100px;
+		right:20px;
 	}
 	label, legend, .INDIgroup h3
 	{
 		color:lightblue;
 		font-weight:bold;
-	}
-	.IText_ro
-	{
-		overflow: hidden;
 	}
 	span#Telemetry
 	{
@@ -177,35 +203,19 @@
 	{
 		padding-right:10px;
 	}
-	#REQ___VARS
-	{
-		display:None;
 
-	}
 	.INDIgroup
 	{
 		margin-right:30px;
+		vertical-align: top;
 	}
 
 	
-	
-
-	fieldset#eqTELEM > span#div,  
-	fieldset#eqTELEM > span#desc, 
-	fieldset#eqTELEM > span#label,
-	fieldset#eqTELEM > span#nxt,
-	fieldset#eqTELEM > span#com,
-	fieldset#eqTELEM > span#cur,
-	fieldset#eqTELEM > span#off
+	fieldset#MSTATUS
 	{
-		display:None;
+		height:auto;
 	}
 
-	fieldset#eqTELEM label
-	{
-		display:inline-block;
-		min-width:100px;
-	}
 	span#cur textarea, span#nxt textarea, span#com textarea
 	{
 		overflow:hidden;
@@ -218,26 +228,15 @@
 	}
 	body
 	{
-		background:#121212;
+		/*background:#121212;*/
+		background:gray;
 	}
 	div#SNOOPER
 	{
 		padding-bottom:10px;
 		
 	}
-	fieldset
-	{
-		display:inline;
-	}
-	div#SNOOPER h3, span#Telemetry h3
-	{
-		display:None;
-		
-	}
-	div#SNOOPER fieldset .INumber_ro
-	{
-		font-size:1.5em;
-	}
+
 	#tabs
 	{
 		height:600px;
@@ -245,10 +244,40 @@
 		overflow:scroll;
 		overflow-x:hidden;
 	}
+	.INDIgroup
+	{
+		Border:1px solid white;
+		margin:30px;
+		display:block;
+	}
+	
+	
+	.INumber_wo, .INumber_ro
+	{
+		display:block;
+	}
+
+	span#Guider_Control > fieldset.INDInvp > legend
+	{
+		display:None;
+	}
+	
+	fieldset.INDIsvp > span.ISwitchspan
+	{
+		display:Table;
+	}
+	
+	fieldset.INDIvp
+	{
+		vertical-align:top;
+	}
+	.modebar{
+      display: none !important;
+	}
 	</style>
 	</head>
 	<body onload="main()" >
-		<div id="SNOOPER" class="INDIdevice"></div>
+	<!--	<div id="SNOOPER" class="INDIdevice"></div>
 		<div id="tcont">
 
 		<div id="tabs" >
@@ -262,6 +291,14 @@
 			<div id="FOCUS-NG-INDI" class="INDIdevice"></div>
 		</div>
 		</div>
-		<textarea rows=3 cols=75 id="INDImsg"></textarea>
+	-->
+	<div class="INDIdevice" id="INDI-VATT-GUIDEBOX">
+		<span id="Guider_Control", class="INDIgroup">
+			<h3>Guider Control</h3>
+			<span id="xypos" style="width:900px; height:900px; display:inline-block"></span>
+		</span>
+	</div>
+
+	<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
 </html>

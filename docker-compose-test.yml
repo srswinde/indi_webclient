@@ -1,7 +1,7 @@
 version: '3'
 services:
         webclient:
-                image: "srswinde/indi_webclient"
+                image: "srswinde/indi_webclient:lvp"
                 ports: 
                         - "3000:3000"
                 environment:
@@ -9,7 +9,7 @@ services:
                 
                 network_mode: "host"
                 command:
-                    /webclient/websocketd --address 0.0.0.0 --port 3000 --devconsole /webclient/webclient localhost
+                        ["/webclient/websocketd", "--address", "0.0.0.0", "--port", "3000", "--devconsole", "/webclient/webclient", "localhost"]
 
         nginx-server:
                 image: "nginx"
@@ -17,7 +17,6 @@ services:
                         - "4001:80"
                 volumes:
                         - "./www:/usr/share/nginx/html"
-                network_mode: "host"
 
         
 #        indidriver:
@@ -26,8 +25,9 @@ services:
 #                        - "7624:7624"
 #                network_mode: "host"
 #                command:
-#                        /bin/rundrivers.sh -c css_sim
-#
+#                        /usr/bin/indiserver  -vvv /driverbin/tcs-indi
+#                        #/usr/bin/indiserver  -vvv /driverbin/tcs-indi /driverbin/dome-indi /driverbin/focus-indi /driverbin/snooper
+
 #        browser:
 #                image: "srswinde/firefox"
 #                volumes:
@@ -37,22 +37,17 @@ services:
 #                command:
 #                        /usr/bin/chromium-browser /usr/bin/chromium-browser --no-sandbox --app=http://localhost/tcs.html
 #                network_mode: "host"
+#
 
+        xephem:
+                image: "srswinde/xephem"
+                volumes:
+                        - "${HOME}/.xephem:/home/developer/.xephem"
+                        - "/tmp/.X11-unix:/tmp/.X11-unix"
+                environment:
+                        - DISPLAY=$DISPLAY
+                        - HOME=/home/developer
+                network_mode: "host"
+                #                depends_on:
+                #                        - browser
 
-#        xephem:
-#                image: "srswinde/xephem"
-#                volumes:
-#                        - "${HOME}/.xephem:/home/developer/.xephem"
-#                        - "/tmp/.X11-unix:/tmp/.X11-unix"
-#                environment:
-#                        - DISPLAY=$DISPLAY
-#                        - HOME=/home/developer
-#                network_mode: "host"
-#                depends_on:
-#                        - browser
-
-        tcs-sim:
-            image: "srswinde/sim-tcs"
-            network_mode: "host"
-            command:
-                /opt/ActiveTcl-8.6/bin/tclsh ./tcs-sim.tcl V06
