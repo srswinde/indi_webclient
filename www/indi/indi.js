@@ -50,7 +50,7 @@ function formatNumber(numStr, fstr)
 
 function nosp(str)
 {
-	return str.replace(' ', '_').replace('.', '__');
+	return str.replace(/ /g, '_').replace('.', '__');
 }
 
 
@@ -120,7 +120,6 @@ function INDIwebsocket(url, container, tabdevice)
 	INDIws.onmessage = function( event )
 	{
 		var data = JSON.parse( event.data );
-		console.log("dev is ", data.device);
 		var ele = '';
 		var newData = false;
 		container = this.devices_container;
@@ -134,7 +133,7 @@ function INDIwebsocket(url, container, tabdevice)
 				newData = true;
 			break;
 			case "svp":
-			
+				console.log("SVP BITCHES")
 				newData = true;
 				ele = newSwitch( data );
 			break;
@@ -142,8 +141,13 @@ function INDIwebsocket(url, container, tabdevice)
 				newData = true;
 				ele = newText( data );
 			break;
+			case "lvp":
+				newData = true;
+				ele = newLight( data );
+			break;
 			case "msg":
 				var msgselector = "textarea#INDImsg";
+				//console.log("Message", data.msg);
 				var msgarea = $(msgselector);
 				msgarea.text( data.msg+'\n'+msgarea.text() );
 
@@ -151,8 +155,16 @@ function INDIwebsocket(url, container, tabdevice)
 			default:
 				console.log("IDK", data.metainfo);
 		}
+
+
 		if(newData)
 		{
+			if(data.metainfo == "svp" || data.metainfo == "tvp" || data.metainfo == "nvp")
+				var prop="background-color";
+			else
+				var prop="color";
+	
+			$(ele).css( prop, indistate2css( data.state ) )
 			var container = postProc( data, ele ) 
 			if( typeof(ele) != 'string' )
 			{
@@ -198,7 +210,6 @@ function INDIwebsocket(url, container, tabdevice)
 *	in its own div. 
 *
 ************************************************************/
-
 function AddDevice(devname, container, tabdevice)
 {
 	var devselector = "div.INDIdevice#"+nosp(devname);
@@ -381,8 +392,15 @@ function newNumber(INDIvp, appendTo)
 			).append( function()
 			{
 				var re = /%(\d+)\.(\d+)[fm]/
-				var numinfo = re.exec(np.format);
-				var len = parseInt(numinfo[1]);
+				try
+				{
+					var numinfo = re.exec(np.format);
+					var len = parseInt(numinfo[1]);
+				}
+				catch(err)
+				{
+					var len=5;
+				}
 				var ro = $('<span/>', {'class':'INumber_ro'}).css({ width:10*len+'px' })
 					
 				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
@@ -547,7 +565,128 @@ function newSwitch( INDIvp, appendTo )
 }
 
 
+/*********************************************************
+* newLight
+* Args INDIvp-> object defining the INDI vector propert, 
+*       appendTo -> jquery selector for which elemebt to 
+*       append the INDivp turned HTML element to.
+*
+* Desription:
+*   Called when the websocket from the indi webclient
+*   generates or updates an INDI switch. If this a 
+*   a never brefore seen INDI switch HTML fieldset
+*   element is created with the correct value otherwise
+*   the element's switch is updated. 
+*
+*
+* Returns: a jquery type selector string. 
+*
+*********************************************************/
+function newLight( INDIvp, appendTo )
+{
+    var nosp_vpname = INDIvp.name.replace( " ", "_" );
+    var nosp_dev = INDIvp.device.replace( " ", "_" );
+    var vpselector = "fieldset.INDIvp#"+nosp_vpname+"[device='"+INDIvp.device+"']";
 
+
+    var retn = $(vpselector);
+    type = 'checkbox'
+
+    if( $(vpselector).length == 0 )
+    {
+
+        var vphtmldef = $( "<fieldset class='INDIvp INDIlvp'/>" )
+            .prop("id", nosp_vpname)
+            .attr("device", INDIvp.device)
+            .attr("group", INDIvp.group)
+            .append("<legend>"+INDIvp.label+"</legend>");
+
+        $.each(INDIvp.lp, function(ii, lp)
+        {       
+            var label = lp.label.replace(" ", "_");
+            var name = lp.name.replace(' ', '_');
+            var lpid = nosp_dev+"__"+name;
+            var lpname = nosp_dev+'__'+nosp_vpname;
+            var scolor = "transparent";
+            switch(lp.s)
+            {
+                case INDISTATE_IDLE:
+                    lightclass = "var( --indistate-idle )";
+                break;
+                case INDISTATE_OK:
+                    lightclass = "var( --indistate-ok )'";
+                break;
+                case INDISTATE_BUSY:
+                    lightclass = "var( --indistate-busy )";
+                break;
+                case INDISTATE_ALERT:
+                    lightclass = "var( --indistate-alert )";
+                break;
+            }
+            vphtmldef.append
+            (
+                $('<span/>',
+                {
+                    'INDIlabel' :lp.label,
+                    'INDIname'  :lp.name,
+                    'class'         :"ILightspan",
+                    'id'                :name,
+                })
+                .append($('<label/>',
+                {
+                    'id'                :name,
+                    'class'         :'ILightlabel',
+                    'id'               :lpid,
+                    'text'          :lp.label,
+					'style'		:	"background-color:"+lightclass
+
+                })));
+           
+        });
+
+        vphtmldef.find( "input[type='"+type+"']" ).checkboxradio();
+
+        if( appendTo != undefined )
+        {
+            vphtmldef.appendTo( appendTo );
+            return vpselector;
+          
+        }
+
+        return vphtmldef;
+    }
+
+    else
+    {
+        $.each(INDIvp.lp, function(ii, lp)
+        {
+            var label = lp.label.replace(" ", "_");
+            var name = lp.name.replace(' ', '_');
+            var lpid = nosp_dev +"__"+ name;
+            var state = lp.state
+			switch(lp.s)
+            {
+                case INDISTATE_IDLE:
+                    lightclass = "var( --indistate-idle )";
+                break;
+                case INDISTATE_OK:
+                    lightclass = "var( --indistate-ok )'";
+                break;
+                case INDISTATE_BUSY:
+                    lightclass = "var( --indistate-busy )";
+                break;
+                case INDISTATE_ALERT:
+                    lightclass = "var( --indistate-alert )";
+                break;
+            }
+            $(vpselector).find('label#'+lpid+'.ILightlabel').css("background-color", lightclass);
+
+            //console.log($("body fieldset.INDIsvp#"+nosp_vpname+"[device='"+INDIvp.device+"']"))
+        });
+    }
+    $(vpselector).find("input[type='"+type+"']").checkboxradio("refresh");
+    return vpselector;
+}  
 
 /*******************************************************************************
 * sendNewSwitch
@@ -674,4 +813,31 @@ function sendNewText(event)
 	}); 
 	INDIws.send(JSON.stringify(out));
 }
+
+
+function indistate2css(INDIvp_state)
+{
+	switch(INDIvp_state)
+	{
+
+		case( INDISTATE_IDLE ):
+			retn = 'var( --indistate-idle )'
+		break;
+		case( INDISTATE_OK ):
+			retn = 'var( --indistate-ok )'
+		break;
+		case( INDISTATE_BUSY ):
+			retn = 'var( --indistate-busy )'
+		break;
+		case( INDISTATE_ALERT ):
+			retn = 'var( --indistate-alert )'
+		break;
+		default:
+			throw("Unkown State error " + INDIvp_state + " Should be " + INDISTATE_IDLE + ", " +  INDISTATE_OK + ", " +INDISTATE_BUSY + "or " + INDISTATE_ALERTa + "not " + INDIvp_state  );
+	
+	}
+	return retn;
+
+}
+
 

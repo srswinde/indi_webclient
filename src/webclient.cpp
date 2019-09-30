@@ -48,10 +48,10 @@ std::string ComQ::pop()
 /********************************************************************
  * WSthread
  * Args:
- *      q-> queue that handles json data form indidriver to webpage
+ *      q-> queue that handles json data from indidriver to webpage
  *      driverQ -> queue that handles json data from webpage to indidriver
  * Description:
- *      THis is the thread that handles the websocket communiccation
+ *      THis is the thread that handles the websocket communication
  *      between this program and the webpage. 
  *
  *
@@ -179,6 +179,7 @@ void MyClient::newProperty(INDI::Property *property)
 	ISwitchVectorProperty *svp;
 	ITextVectorProperty *tvp;
 	INumberVectorProperty *nvp;
+	ILightVectorProperty *lvp;
 	json indijson;
 	switch(property->getType())
 	{
@@ -198,9 +199,14 @@ void MyClient::newProperty(INDI::Property *property)
 			indijson = jsonify(tvp);
 			clientQ->push(&indijson);
 		break;
+		case INDI_LIGHT:
+			 lvp = property->getLight();
+			 indijson = jsonify(lvp);
+			 clientQ->push(&indijson);
+		break;
 
 		default:
-			std::cout << "IDK" << std::endl;
+			std::cout << "{Error: \"could not understand INDI Property.\"}" << std::endl;
 	}
 	
 
@@ -234,6 +240,18 @@ void MyClient::newText(ITextVectorProperty *tvp)
 		clientQ->push(&jtvp);
 
 }
+/**************************************************************************************
+**
+***************************************************************************************/
+void MyClient::newLight(ILightVectorProperty *lvp)
+{
+		
+		json jlvp = jsonify(lvp);
+		clientQ->push(&jlvp);
+		std::cerr << "New mother fucking light" <<std::endl;
+
+}
+
 /**************************************************************************************
 **
 ***************************************************************************************/
@@ -395,6 +413,41 @@ void * 	aux
 
 }
 
+json MyClient::jsonify(ILightVectorProperty *lvp)
+{
+/*
+
+char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPState 	s
+ILight * 	lp
+int 	nlp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux
+*/
+	json jlvp;
+	ILight *lp;
+	jlvp["metainfo"] = "lvp";
+	jlvp["device"] = lvp->device;
+	jlvp["name"] = lvp->name;
+	jlvp["label"] = lvp->label;
+	jlvp["group"] = lvp->group;
+	jlvp["state"] = lvp->s;
+	jlvp["timestsamp"] = "";
+	for(int ii=0; ii<lvp->nlp; ii++)
+	{
+		lp=lvp->lp+ii;
+		jlvp["lp"][ii]["name"] = lp->name;
+		jlvp["lp"][ii]["label"] = lp->label;
+		jlvp["lp"][ii]["s"] = lp->s;
+		std::cerr << lp->name << " " << lp->label << " " << lp->s <<std::endl;
+	}
+
+	return jlvp;
+
+}
 
 json MyClient::jsonify(std::string msg, const char *devname)
 {
@@ -515,26 +568,45 @@ void MyClient::Update(json data)
 int main(int argc, char ** argv )
 {
 	ComQ webQ; //Q for communicating with web page
-	ComQ driverQ;//Q for communicating with indiserver
+	ComQ driverQ;//Q for communicating with indiserver	
+	std::string driverData;
+	//b_client->watchDevice("TCS-NG-INDI");
+
+	//for some reason watchProperty causes an error
+	//web_client->watchProperty("TCS-NG-INDI", "stTELEM");
+	//web_client->watchProperty("TCS-NG-INDI", "SERVICE_POSITIONS");
+	//web_client->watchProperty("TCS-NG-INDI", "CONNECTION");
+
 	web_client->setQ(&webQ);
 	web_client->setDevQ(&driverQ);
 	web_client->setServer(argv[1], 7624);
-    web_client->watchProperty("TCS-NG-INDI", "stTELEM");
+    
 	
     	while(web_client->connectServer() == false)
 	{
 		usleep(2e6);
 	}
 	std::vector< INDI::BaseDevice * >  devs;
-	web_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
+	//web_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
 	
 	std::thread t1(WSthread, &webQ, &driverQ);
+
 	webQ.connected = true;
 	while(webQ.connected)
 	{
 		if(driverQ.size() !=0)
 		{
-			web_client->Update(json::parse(driverQ.pop()));
+			try
+			{
+				web_client->Update(json::parse(driverQ.pop()));
+			}	
+			catch(...)
+			{
+				std::cerr << "Could not parse driver data"<< std::endl;
+				continue;
+			}
+
+
 		}
 		usleep( (int) 1e5 );
 	}

@@ -14,7 +14,7 @@
 	function main()
 	{
 		var host = location.host.split(":")[0];
-		var url="ws://"+host+":3000";
+		var url = "ws://"+host+":3000";
 		INDIwebsocket(url, 'body');
 	}	
 
@@ -26,6 +26,7 @@
 
 		if( $(devselector).length == 0 )
 		{
+			//console.log("creating container")
 			$("<div/>", {id:nosp(INDIvp.device)}).addClass("INDIdevice").appendTo("#body");
 		}
 		if( $(grpselector).length == 0 )
@@ -48,7 +49,34 @@
 			$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
 			$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
 		}
-		
+		if(INDIvp.metainfo == "svp")
+			var prop="background-color";
+		else
+			var prop="color"
+		switch(INDIvp.state)
+		{
+
+			case(INDISTATE_IDLE ):
+				$(ele).css(prop, 'var( --indistate-idle )')
+				$(ele).find("textarea").css("color", 'var( --indistate-idle )')
+			break;
+			case(INDISTATE_OK ):
+				$(ele).css(prop, 'var( --indistate-ok )')
+				$(ele).find("textarea").css("color", 'var( --indistate-ok)')
+			break;
+			case(INDISTATE_BUSY ):
+				$(ele).css(prop, 'var( --indistate-busy )')
+				$(ele).find("textarea").css("color", 'var( --indistate-busy )')
+			break;
+			case(INDISTATE_ALERT ):
+				$(ele).css(prop, 'var( --indistate-alert )')
+				$(ele).find("textarea").css("color", 'var( --indistate-alert )')
+			break;
+			default:
+				//console.log("idk", data.name, data.state);
+		}
+
+
 		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
 
 		if ($(oselector).length==1)
@@ -61,14 +89,14 @@
 		}
 		else
 		{
-			var rtn = "body"
+			return "body";
 		}
-		return $("body")
+		return rtn
 	}
 
 	$( function() 
 	{
-		$("#tabs").tabs()
+		$("#tabs").tabs();
 	} );
 	$( function() 
 	{
@@ -85,10 +113,15 @@
 		bottom:20px;
 		left:20px;
 	}
+	/*
 	label, legend, .INDIgroup h3
 	{
 		color:lightblue;
 		font-weight:bold;
+	}
+	.IText_ro
+	{
+		overflow: hidden;
 	}
 	span#Telemetry
 	{
@@ -160,10 +193,7 @@
 	}
 
 	
-	fields#MSTATUS
-	{
-		height:auto;
-	}
+	
 
 	fieldset#eqTELEM > span#div,  
 	fieldset#eqTELEM > span#desc, 
@@ -193,8 +223,7 @@
 	}
 	body
 	{
-		/*background:#121212;*/
-		background:gray;
+		background:#121212;
 	}
 	div#SNOOPER
 	{
@@ -220,11 +249,45 @@
 		width:65%;
 		overflow:scroll;
 		overflow-x:hidden;
+	}*/	
+	
+	fieldset
+	{
+		display:None;
+	}
+	span#COORDINATES
+	{
+		display:None;
+	}
+	fieldset#SERVICE_POSITIONS, fieldset#stTELEM[device=TCS-NG-INDI], fieldset#ACTIONS
+	{
+		display:inline-block;
+	} 
+	fieldset#stTELEM > span, fieldset#ACTIONS > span
+	{
+		display:None;
+	}
+	fieldset#stTELEM > span#alt, fieldset#stTELEM > span#az, fieldset#ACTIONS > span#CANCEL, fieldset#ACTIONS > span#ENABLE
+	{
+		display:inline;
+	}
+	fieldset#stTELEM > span> textarea
+	{
+		font-size:20px;
+		width:85px;
+		margin:0px;
+		overflow:hidden;
+	}
+	body
+	{
+		padding:20px;
+		background-color:#222222;
 	}
 	</style>
 	</head>
 	<body onload="main()" >
-	<!--	<div id="SNOOPER" class="INDIdevice"></div>
+		<div id="SNOOPER" class="INDIdevice"></div>
+		<!--
 		<div id="tcont">
 
 		<div id="tabs" >
@@ -238,7 +301,7 @@
 			<div id="FOCUS-NG-INDI" class="INDIdevice"></div>
 		</div>
 		</div>
-	-->
-	<textarea rows=3 cols=75 id="INDImsg"></textarea>
+		-->
+		<!--<textarea rows=3 cols=75 id="INDImsg"></textarea>-->
 	</body>
 </html>
