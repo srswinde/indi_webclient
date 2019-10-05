@@ -27,7 +27,7 @@
 	function postProc(INDIvp, ele)
 	{
 		var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
-		var grpselector = devselector+" span.INDIgroup#"+nosp(INDIvp.group);
+		var grpselector = devselector+" div.INDIgroup#"+nosp(INDIvp.group);
 		var menuselector = devselector+" ul.devmenu li ul"
 
 		if( $(devselector).length == 0 )
@@ -51,11 +51,14 @@
 			$(menuselector).closest("ul.devmenu").menu("refresh");
 		*/
 
-			$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
+			$("<div/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
 			$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
 		}
 		
 		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
+
+		if(INDIvp.name == "M1LIM")
+			console.log(grpselector)
 
 		if ($(oselector).length==1)
 		{
@@ -208,6 +211,11 @@
 	{
 		margin-right:30px;
 		vertical-align: top;
+		Border:1px solid white;
+		margin:30px;
+		display:block;
+
+		display:flow-root;
 	}
 
 	
@@ -231,11 +239,6 @@
 		/*background:#121212;*/
 		background:gray;
 	}
-	div#SNOOPER
-	{
-		padding-bottom:10px;
-		
-	}
 
 	#tabs
 	{
@@ -244,13 +247,7 @@
 		overflow:scroll;
 		overflow-x:hidden;
 	}
-	.INDIgroup
-	{
-		Border:1px solid white;
-		margin:30px;
-		display:block;
-	}
-	
+		
 	
 	.INumber_wo, .INumber_ro
 	{
@@ -271,6 +268,31 @@
 	{
 		vertical-align:top;
 	}
+	fieldset#LOWER_FNAMES > span.ITextspan, fieldset#UPPER_FNAMES > span.ITextspan, fieldset#GUIDER_FNAMES > span.ITextspan
+	{
+		display:flex;
+	}
+	
+	span.fwheel_pos, span.linear_pos
+	{
+		position:relative;
+		display:block;
+	}
+	
+	span.fwheel_pos > fieldset, span.linear_pos > fieldset
+	{
+		width:300px;
+		margin:15px;
+	}
+	span.fwheel_pos > fieldset > legend, span.linear_pos > fieldset > legend
+	{
+		display:none;
+	}
+	span#xypos
+	{
+		float:left;
+
+	}
 	.modebar{
       display: none !important;
 	}
@@ -278,27 +300,52 @@
 	</head>
 	<body onload="main()" >
 	<!--	<div id="SNOOPER" class="INDIdevice"></div>
-		<div id="tcont">
-
-		<div id="tabs" >
-			  <ul>
-				<li><a href="#TCS-NG-INDI">Telescope</a></li>
-				<li><a href="#DOME-NG-INDI">Dome</a></li>
-				<li><a href="#FOCUS-NG-INDI">FOCUS</a></li>
-			</ul>
-			<div id="TCS-NG-INDI" class="INDIdevice"></div>
-			<div id="DOME-NG-INDI" class="INDIdevice"></div>
-			<div id="FOCUS-NG-INDI" class="INDIdevice"></div>
-		</div>
-		</div>
 	-->
 	<div class="INDIdevice" id="INDI-VATT-GUIDEBOX">
-		<span id="Guider_Control", class="INDIgroup">
+		<div id="Guider_Control", class="INDIgroup">
 			<h3>Guider Control</h3>
-			<span id="xypos" style="width:900px; height:900px; display:inline-block"></span>
-		</span>
-	</div>
+			<span id="xypos" style="width:400px; height:400px; display:inline-block"></span>
+			<span id="fwheel_span" style="float:left">
+				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="FWHEEL_UPPER" indigroup="Guider Control"></span>
+				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="FWHEEL_LOWER" indigroup="Guider Control"></span>
+				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_FWHEEL" indigroup="Guider Control"></span>
+				<span indidevice="INDI-VATT-GUIDEBOX" indiname="LOWER_FNAMES" indigroup="Guider Control" style="display:none"></span>
+				<span indidevice="INDI-VATT-GUIDEBOX" indiname="UPPER_FNAMES" indigroup="Guider Control" style="display:none"></span>
+				<span indidevice="INDI-VATT-GUIDEBOX" indiname="GUIDER_FNAMES" indigroup="Guider Control" style="display:none"></span>
+			</span>
 
+			<span id="linear_span" style="float:left">
+				
+				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_X" indigroup="Guider Control"></span>
+				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_Y" indigroup="Guider Control"></span>
+				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_FOCUS" indigroup="Guider Control"></span>
+				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_MIRRORS" indigroup="Guider Control"></span>
+			</span>
+		</div>
+		<div id="tcont">
+
+		<div id="tabs" style="background:transparent">
+			  <ul>
+				<li><a href="#Motor_1_Eng">Motor 1</a></li>
+				<li><a href="#Motor_2_Eng">Motor 2</a></li>
+				<li><a href="#Motor_3_Eng">Motor 3</a></li>
+				<li><a href="#Motor_4_Eng">Motor 4</a></li>
+				<li><a href="#Motor_5_Eng">Motor 5</a></li>
+				<li><a href="#Motor_6_Eng">Motor 6</a></li>
+				<li><a href="#Motor_7_Eng">Motor 7</a></li>
+			</ul>
+			<div id="Motor_1_Eng" class="INDIgroup"></div>
+			<div id="Motor_2_Eng" class="INDIgroup"></div>
+			<div id="Motor_3_Eng" class="INDIgroup"></div>
+			<div id="Motor_4_Eng" class="INDIgroup"></div>
+			<div id="Motor_5_Eng" class="INDIgroup"></div>
+			<div id="Motor_6_Eng" class="INDIgroup"></div>
+			<div id="Motor_7_Eng" class="INDIgroup"></div>
+		</div>
+		</div>
+
+	</div>
+		
 	<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
 </html>
