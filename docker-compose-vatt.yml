@@ -19,19 +19,21 @@ services:
                         - "./www:/usr/share/nginx/html"
         
         indiserver:
-                # stable was a version with a bug on 
-                # the auto collimation routine
-                # We should move the latest 
+                # stable tag was a version with no error
+                # message if vatttel was not communicating
+                # We should move the vatttel_not_on
                 # to stable when we are sure the
-                # bug fix doesn't cause anymore issues
+                # update fix doesn't cause any issues
                 # -Scott May 2019
                 
                 
                 #                image:  "srswinde/indihex:stable"
-                image: "srswinde/indihex:latest"
+                image: "srswinde/indihex:vatttel_not_on"
                 ports:
                         - "7624:7624"
                 command: /usr/bin/indiserver -v /driver/build/sdev
+                volumes:
+                        - "/home/scott/.mtnops/docker-volumes/indihex/posfile.d:/data/"
                 network_mode: host
 
 
