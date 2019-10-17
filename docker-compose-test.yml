@@ -39,15 +39,15 @@ services:
 #                network_mode: "host"
 #
 
-        xephem:
-                image: "srswinde/xephem"
-                volumes:
-                        - "${HOME}/.xephem:/home/developer/.xephem"
-                        - "/tmp/.X11-unix:/tmp/.X11-unix"
-                environment:
-                        - DISPLAY=$DISPLAY
-                        - HOME=/home/developer
-                network_mode: "host"
-                #                depends_on:
-                #                        - browser
-
+#        xephem:
+#                image: "srswinde/xephem"
+#                volumes:
+#                        - "${HOME}/.xephem:/home/developer/.xephem"
+#                        - "/tmp/.X11-unix:/tmp/.X11-unix"
+#                environment:
+#                        - DISPLAY=$DISPLAY
+#                        - HOME=/home/developer
+#                network_mode: "host"
+#                #                depends_on:
+#                #                        - browser
+#
