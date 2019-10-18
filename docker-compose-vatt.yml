@@ -1,13 +1,13 @@
 version: '2'
 services:
         webclient:
-                image: "srswinde/indi_webclient:test"
+                image: "srswinde/indi_webclient:lvp"
                 ports: 
                         - "3000:3000"
                 environment:
                         - INDISERVER=indiserver
-                depends_on:
-                        - "indiserver"
+#                depends_on:
+#                        - "indiserver"
                 command: /webclient/websocketd --address=0.0.0.0 --devconsole --port=3000 /webclient/webclient localhost
                 network_mode: host
 
@@ -18,22 +18,22 @@ services:
                 volumes:
                         - "./www:/usr/share/nginx/html"
         
-        indiserver:
-                # stable tag was a version with no error
-                # message if vatttel was not communicating
-                # We should move the vatttel_not_on
-                # to stable when we are sure the
-                # update fix doesn't cause any issues
-                # -Scott May 2019
-                
-                
-                #                image:  "srswinde/indihex:stable"
-                image: "srswinde/indihex:vatttel_not_on"
-                ports:
-                        - "7624:7624"
-                command: /usr/bin/indiserver -v /driver/build/sdev
-                volumes:
-                        - "/home/scott/.mtnops/docker-volumes/indihex/posfile.d:/data/"
-                network_mode: host
-
+#        indiserver:
+#                # stable tag was a version with no error
+#                # message if vatttel was not communicating
+#                # We should move the vatttel_not_on
+#                # to stable when we are sure the
+#                # update fix doesn't cause any issues
+#                # -Scott May 2019
+#                
+#                
+#                #                image:  "srswinde/indihex:stable"
+#                image: "srswinde/indihex:vatttel_not_on"
+#                ports:
+#                        - "7624:7624"
+#                command: /usr/bin/indiserver -v /driver/build/sdev
+#                volumes:
+#                        - "/home/scott/.mtnops/docker-volumes/indihex/posfile.d:/data/"
+#                network_mode: host
+#
 

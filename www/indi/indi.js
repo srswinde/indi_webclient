@@ -119,7 +119,16 @@ function INDIwebsocket(url, container, tabdevice)
 	}
 	INDIws.onmessage = function( event )
 	{
-		var data = JSON.parse( event.data );
+		try
+		{
+			var data = JSON.parse( event.data );
+			
+		}
+		catch(err)
+		{
+			console.log(event.data, err);
+			return;
+		}
 		var ele = '';
 		var newData = false;
 		container = this.devices_container;
@@ -133,7 +142,6 @@ function INDIwebsocket(url, container, tabdevice)
 				newData = true;
 			break;
 			case "svp":
-				console.log("SVP BITCHES")
 				newData = true;
 				ele = newSwitch( data );
 			break;
@@ -788,6 +796,7 @@ function sendNewNumber(event)
 function sendNewText(event)
 {
 	var ft = $(event.target).closest(".INDItvp");
+	console.log(event.target);
 	var IText = $(event.target);
 	var out = {
 		"task":"updateText",
