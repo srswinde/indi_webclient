@@ -141,8 +141,19 @@
 			margin: { t: 0 },
 			xaxis: {range:[-100,100], fixedrange: true},
 			yaxis: {range:[-70,120], fixedrange: true},
-			paper_bgcolor:'rgba(0,0,0,0)',
+			paper_bgcolor:'rgba(0,0,0,0.5)',
             plot_bgcolor:'rgba(0,0,0,0)',
+			shapes:[{
+				type:"rect",
+				xref:'x',
+				yref:'y',
+				fillcolor:'green',
+				x0:0,
+				y0:0,
+				x1:13,
+				y1:17,
+				
+			}]
 
 		};
 		
@@ -173,7 +184,41 @@
 				$("span#OFFSET_Y.INumberspan > input.INumber_wo").val(parseInt(y));
 
 			})
+			setTimeout(updatexy, 1000);
 
+	}
+
+	function updatexy()
+	{
+		var xsel = "fieldset#OFFSET_X.INDInvp > span#OFFSET_X > span.INumber_ro"
+		var ysel = "fieldset#OFFSET_Y.INDInvp > span#OFFSET_Y > span.INumber_ro"
+		xpos = parseFloat($(xsel).text())
+		ypos = parseFloat($(ysel).text())
+		if(isNaN(xpos) || isNaN(ypos))
+		{
+			console.log("NO dice");
+		}	
+		else
+		{
+			console.log(xpos, ypos);
+			var update={
+				shapes:[{
+					type:"rect",
+					xref:'x',
+					yref:'y',
+					fillcolor:'green',
+					x0:xpos-(13.0/2.0),
+					y0:ypos-(13.0/2.0),
+					x1:xpos+(17.0/2.0),
+					y1:ypos+(17.0/2.0),
+
+				}]
+			}
+			
+			UMIRROR = document.getElementById('xypos');
+			Plotly.relayout(UMIRROR, update)
+		}
+		setTimeout(updatexy, 2000);
 	}
 
 	</script>
