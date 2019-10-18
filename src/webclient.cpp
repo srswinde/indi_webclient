@@ -579,7 +579,12 @@ int main(int argc, char ** argv )
 
 	web_client->setQ(&webQ);
 	web_client->setDevQ(&driverQ);
-	web_client->setServer(argv[1], 7624);
+	if(argc == 2)
+		web_client->setServer(argv[1], 7624);
+	else if(argc == 3)
+		web_client->setServer(argv[1], atoi(argv[2]));
+	else
+		web_client->setServer("localhost", 7624);
     
 	
     	while(web_client->connectServer() == false)
