@@ -1,0 +1,39 @@
+version: '2'
+services:
+        webclient:
+                image: "srswinde/indi_webclient:guider"
+                ports: 
+                        - "3001:3001"
+                environment:
+                        - INDISERVER=indiserver
+#                depends_on:
+#                        - "indiserver"
+                command: /webclient/websocketd --address=0.0.0.0 --port=3001 /webclient/webclient localhost 7623
+                network_mode: host
+
+        nginx-server:
+                image: "nginx"
+                ports:
+                        - "4002:80"
+                volumes:
+                        - "./www:/usr/share/nginx/html"
+        
+#        indiserver:
+#                # stable tag was a version with no error
+#                # message if vatttel was not communicating
+#                # We should move the vatttel_not_on
+#                # to stable when we are sure the
+#                # update fix doesn't cause any issues
+#                # -Scott May 2019
+#                
+#                
+#                #                image:  "srswinde/indihex:stable"
+#                image: "srswinde/indihex:vatttel_not_on"
+#                ports:
+#                        - "7624:7624"
+#                command: /usr/bin/indiserver -v /driver/build/sdev
+#                volumes:
+#                        - "/home/scott/.mtnops/docker-volumes/indihex/posfile.d:/data/"
+#                network_mode: host
+#
+
