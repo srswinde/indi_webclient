@@ -18,7 +18,7 @@
 	function main()
 	{
 		var host = location.host.split(":")[0];
-		var url="ws://"+host+":3000";
+		var url="ws://"+host+":3001";
 		INDIwebsocket(url, 'body');
 		buildxy();
 		setTimeout(idleProc, 1000);
@@ -381,8 +381,13 @@
 	}
 	.modebar
 	{
-      display: none !important;
+	      display: none !important;
 	}
+	div#Engineering, #GETDATA
+	{
+		display:none;
+	}
+
 	</style>
 	</head>
 	<body onload="main()" >
@@ -396,9 +401,9 @@
 				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="FWHEEL_UPPER" indigroup="Guider Control"></span>
 				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="FWHEEL_LOWER" indigroup="Guider Control"></span>
 				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_FWHEEL" indigroup="Guider Control"></span>
-				<span indidevice="INDI-VATT-GUIDEBOX" indiname="LOWER_FNAMES" indigroup="Guider Control" style="display:default"></span>
-				<span indidevice="INDI-VATT-GUIDEBOX" indiname="UPPER_FNAMES" indigroup="Guider Control" style="display:default"></span>
-				<span indidevice="INDI-VATT-GUIDEBOX" indiname="GUIDER_FNAMES" indigroup="Guider Control" style="display:default"></span>
+				<span indidevice="INDI-VATT-GUIDEBOX" indiname="LOWER_FNAMES" indigroup="Guider Control" style="display:none"></span>
+				<span indidevice="INDI-VATT-GUIDEBOX" indiname="UPPER_FNAMES" indigroup="Guider Control" style="display:none"></span>
+				<span indidevice="INDI-VATT-GUIDEBOX" indiname="GUIDER_FNAMES" indigroup="Guider Control" style="display:none"></span>
 			</span>
 
 			<span id="linear_span" style="float:left">
@@ -409,7 +414,7 @@
 				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_MIRRORS" indigroup="Guider Control"></span>
 			</span>
 		</div>
-		<div id="tcont">
+		<div id="tcont" style="display:none">
 
 		<div id="tabs" style="background:transparent">
 			  <ul>
@@ -432,7 +437,7 @@
 		</div>
 
 	</div>
-	<div id="filter_dialog" style"display:none"> 
+	<div id="filter_dialog" style="display:none"> 
 		<input type="text" id="filter_name_input"> </input>
 		<script>
 				$("input#filter_name_input").keypress(function(event)

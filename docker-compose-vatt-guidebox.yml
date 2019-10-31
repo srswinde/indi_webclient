@@ -1,6 +1,6 @@
 version: '2'
 services:
-        webclient:
+        webclient_guidebox:
                 image: "srswinde/indi_webclient:guider"
                 ports: 
                         - "3001:3001"
@@ -8,10 +8,10 @@ services:
                         - INDISERVER=indiserver
 #                depends_on:
 #                        - "indiserver"
-                command: /webclient/websocketd --address=0.0.0.0 --port=3001 /webclient/webclient localhost 7623
+                command: /webclient/websocketd --devconsole --address=0.0.0.0 --port=3001 /webclient/webclient localhost 7623
                 network_mode: host
 
-        nginx-server:
+        nginx-server_guidebox:
                 image: "nginx"
                 ports:
                         - "4002:80"
