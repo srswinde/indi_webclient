@@ -16,24 +16,26 @@ services:
                 ports:
                         - "4002:80"
                 volumes:
-                        - "./www:/usr/share/nginx/html"
+                        - "${WWW_DIR}/www:/usr/share/nginx/html"
         
-#        indiserver:
-#                # stable tag was a version with no error
-#                # message if vatttel was not communicating
-#                # We should move the vatttel_not_on
-#                # to stable when we are sure the
-#                # update fix doesn't cause any issues
-#                # -Scott May 2019
-#                
-#                
-#                #                image:  "srswinde/indihex:stable"
-#                image: "srswinde/indihex:vatttel_not_on"
-#                ports:
-#                        - "7624:7624"
-#                command: /usr/bin/indiserver -v /driver/build/sdev
-#                volumes:
-#                        - "/home/scott/.mtnops/docker-volumes/indihex/posfile.d:/data/"
-#                network_mode: host
-#
+        indiserver:
+                # stable tag was a version with no error
+                # message if vatttel was not communicating
+                # We should move the vatttel_not_on
+                # to stable when we are sure the
+                # update fix doesn't cause any issues
+                # -Scott May 2019
+                
+                
+                #                image:  "srswinde/indihex:stable"
+                image: "srswinde/indihex:guidebox_secondary"
+                ports:
+                        - "7623:7623"
+                command: /usr/bin/indiserver -p 7623 -v /driver/build/sdev /driver/build/indi-vatt-guidebox
+                volumes:
+                        - "/home/scott/.mtnops/docker-volumes/indihex/posfile.d:/data/"
+                devices:
+                        - "/dev/ttyUSB0:/dev/ttyUSB0"
+                network_mode: host
+
 

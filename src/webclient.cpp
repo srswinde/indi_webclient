@@ -248,7 +248,7 @@ void MyClient::newLight(ILightVectorProperty *lvp)
 		
 		json jlvp = jsonify(lvp);
 		clientQ->push(&jlvp);
-		std::cerr << "New mother fucking light" <<std::endl;
+		//std::cerr << "New mother fucking light" <<std::endl;
 
 }
 
@@ -442,7 +442,7 @@ void * 	aux
 		jlvp["lp"][ii]["name"] = lp->name;
 		jlvp["lp"][ii]["label"] = lp->label;
 		jlvp["lp"][ii]["s"] = lp->s;
-		std::cerr << lp->name << " " << lp->label << " " << lp->s <<std::endl;
+		//std::cerr << lp->name << " " << lp->label << " " << lp->s <<std::endl;
 	}
 
 	return jlvp;

@@ -97,22 +97,24 @@ function collect()
 *
 *
 ******************************************/
-function INDIwebsocket(url, container, tabdevice)
+function INDIwebsocket(url, container, devicelist)
 {
 	if(url == undefined)
 	{
 		url = "ws://indiserver:3000"
 	}
 	
-	if (tabdevice == undefined)
+	if (devicelist == undefined)
 	{
-		tabdevice = false;
+		devicelist = [];
 	}
 
 
 	container = (container == "undefined")? "body" : container
+	devicelist = (devicelist == "undefined")? [] : devicelist
 	INDIws = new WebSocket( url );
 	INDIws.devices_container = container
+	INDIws.devicelist = devicelist;
 	INDIws.onerror = function(event)
 	{
 		$("#wsDialog").dialog("open").find('b').text(url);
@@ -132,6 +134,30 @@ function INDIwebsocket(url, container, tabdevice)
 		var ele = '';
 		var newData = false;
 		container = this.devices_container;
+
+		var baddevice = true;
+		console.log(data)
+		if(this.devicelist.length > 0)
+		{//if devicelist isn't an empty array check it against incoming VP's
+			
+			for(dev in this.devicelist)
+			{
+				if( data.device == this.devicelist[dev] )
+				{
+					baddevice=false;
+					break;
+				}
+			}
+		}
+		else
+		{//... if it is an empty array allow all VP's.
+			baddevice=false;
+		}
+
+		if (baddevice)
+		{
+			return;
+		}
 		switch (data.metainfo)
 		{
 			case "newDevice":

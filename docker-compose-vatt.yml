@@ -16,7 +16,7 @@ services:
                 ports:
                         - "4001:80"
                 volumes:
-                        - "./www:/usr/share/nginx/html"
+                        - "${WWW_DIR}/www:/usr/share/nginx/html"
         
         indiserver:
                 # stable tag was a version with no error
