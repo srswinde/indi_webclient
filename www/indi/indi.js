@@ -12,6 +12,13 @@ INDISWRULE_ATMOST1 = 1;
 INDISWRULE_NOFMANY = 2;
 
 
+CONFIG ={
+	NUM_SIZE:null,
+	SHOW_SWITCH_ICON:null
+	
+
+}
+
 /*********************
 * formatNumber
 * Args: numStr=>the number as a string
@@ -136,7 +143,6 @@ function INDIwebsocket(url, container, devicelist)
 		container = this.devices_container;
 
 		var baddevice = true;
-		console.log(data)
 		if(this.devicelist.length > 0)
 		{//if devicelist isn't an empty array check it against incoming VP's
 			
@@ -433,10 +439,13 @@ function newNumber(INDIvp, appendTo)
 				}
 				catch(err)
 				{
-					var len=5;
+					var len = 5;
+				}
+				if(CONFIG["NUM_SIZE"] != null)
+				{
+					len=CONFIG["NUM_SIZE"];
 				}
 				var ro = $('<span/>', {'class':'INumber_ro'}).css({ width:10*len+'px' })
-					
 				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
 				.attr("value", np.value )
 				.keypress(function(event)
@@ -570,8 +579,12 @@ function newSwitch( INDIvp, appendTo )
 			));
 			
 		});
-
-		vphtmldef.find( "input[type='"+type+"']" ).checkboxradio();
+		icon=true;
+		if(CONFIG["SHOW_SWITCH_ICON"] != null)
+		{
+			var icon = CONFIG["SHOW_SWITCH_ICON"]
+		}
+		vphtmldef.find( "input[type='"+type+"']" ).checkboxradio({icon:icon});
 
 		if( appendTo != undefined )
 		{
@@ -583,6 +596,7 @@ function newSwitch( INDIvp, appendTo )
 
 	else
 	{
+		
 		$.each(INDIvp.sp, function(ii, sp)
 		{
 			var label = sp.label.replace(" ", "_");
@@ -593,8 +607,9 @@ function newSwitch( INDIvp, appendTo )
 			
 			//console.log($("body fieldset.INDIsvp#"+nosp_vpname+"[device='"+INDIvp.device+"']"))
 		});
+		
 	}
-	$(vpselector).find("input[type='"+type+"']").checkboxradio("refresh");
+	//$(vpselector).find("input[type='"+type+"']").checkboxradio("refresh");
 	return vpselector;
 }
 
