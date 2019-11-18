@@ -4,27 +4,42 @@
 	 <meta charset="UTF-8">
 	<script src="plotly/plotly-latest.min.js"></script>
 
-	<Title> Guide Box</Title>
+	<Title> VATTSPEC Guidebox and Secondary</Title>
 	
 	<link rel="stylesheet" href="indi.css">
-	<script src="//code.jquery.com/jquery-1.12.4.js"></script>
-	<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-	<script src=""></script>
+	<script src="jquery-1.12.4.js"></script>
+	<script src="jquery-ui.js"></script>
+	<script src="plotly/plotly-latest.min.js"></script>
 	<link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.min.css">
 	<script src="indi/indi.js"></script>
 
 	<script>
 	function main()
 	{
+		CONFIG["NUM_SIZE"] = 1;
+		CONFIG["SHOW_SWITCH_ICON"] = false;
 		var host = location.host.split(":")[0];
-		var url="ws://"+host+":3000";
-		INDIwebsocket(url, 'body');
+		var url="ws://"+host+":3001";
+		INDIwebsocket(url, 'body', ["INDI-VATT-GUIDEBOX", "VATT Secondary"]);
 		buildxy();
 		setTimeout(idleProc, 1000);
 
 	}	
-	
+
+	/*******************************************
+	 *Name: idleProc
+	 *Description: In general this function is 
+	 *	meant to be used as an idol time
+	 *	function to do whatever may be needed.
+	 *	It is called again with the setTimeout
+	 *	function. For this page it is called
+	 *	until the filter wheel buttons
+	 *	show up and then it binds a right
+	 *	click event so the user can change
+	 *	the name of the filter. 
+	 *
+	 ******************************************/
+
 	function idleProc()
 	{
 		var lfs_sel = "fieldset#LFS.INDIsvp"
@@ -40,7 +55,9 @@
 				return;
 			}
 		}
-
+		$("#OFFSET_X > label").text("Offset X")
+		$("#OFFSET_Y > label").text("Offset Y")
+		$("#OFFSET_FOCUS > label").text("FOCUS")
 		//The below .each function iterates through
 		// all the filter wheel switches and allows
 		// you to bind a right click event to them 
@@ -67,6 +84,17 @@
 			});
 		})
 	}
+
+	/**************************************************
+	 * Name: postProc
+	 * Description: This function is called by indi.js
+	 *	anytime there is a new INDI vector property
+	 * 	or an update to the existing property. This 
+	 *	is a space where you can customize the placement
+	 *	and some of the behavior of the widgets. It returns
+	 *	a jquery selector string that indi.js will then append
+	 *	the new widget to the selector. 
+	 *******************************************************/
 	function postProc(INDIvp, ele)
 	{
 		var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
@@ -100,8 +128,6 @@
 		
 		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
 
-		if(INDIvp.name == "M1LIM")
-			console.log(grpselector)
 
 		if ($(oselector).length==1)
 		{
@@ -114,6 +140,21 @@
 		else
 		{
 			var rtn = "body"
+		}
+
+		var firstTime = true;
+		if(firstTime)
+		{
+			if($(ele).attr("type") == 'radio' || $(ele).attr("type") == 'checkbox' )
+			{//Remove the icon from the buttons. 
+				//$("ele").checkboxradio({icon:false});
+				
+			}
+			if($(ele).attr("type") == 'text')
+			{
+				$("ele").attr("size", "1")
+			}
+			firstTime = false;
 		}
 		return rtn
 	}
@@ -171,7 +212,6 @@
 				p = {x: point[0]-(180), y: 100-point[1] };
 				$("span#OFFSET_X.INumberspan > input.INumber_wo").val(parseInt(p.x));
 				$("span#OFFSET_Y.INumberspan > input.INumber_wo").val(parseInt(p.y));
-				console.log(point)
 			} )
 			
 			
@@ -196,7 +236,7 @@
 		ypos = parseFloat($(ysel).text())
 		if(isNaN(xpos) || isNaN(ypos))
 		{
-			console.log("NO dice");
+			/*console.log("NO dice");*/
 		}	
 		else
 		{
@@ -205,9 +245,8 @@
 				shapes:[{
 					type:"rect",
 					xref:'x',
-					yref:'y',
-					fillcolor:'green',
-					x0:xpos-(13.0/2.0),
+					yref:'y',					fillcolor:'green',
+	x0:xpos-(13.0/2.0),
 					y0:ypos-(13.0/2.0),
 					x1:xpos+(17.0/2.0),
 					y1:ypos+(17.0/2.0),
@@ -223,216 +262,101 @@
 
 	</script>
 	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/vader/jquery-ui.css">
+	<link rel="stylesheet" href="vatt_users.css">
 	<style>
-	fieldset#CONNECTION
-	{
-		position:fixed;
-		bottom:100px;
-		right:20px;
-	}
-	label, legend, .INDIgroup h3
-	{
-		color:lightblue;
-		font-weight:bold;
-	}
-	span#Telemetry
-	{
-		position:fixed;
-		top:80px;
-		right:10px;
-		max-width:30%;
+		body > fieldset
+		{/*Don't display any uncaptured INDI Vector Props*/
+			display:none;
+		}
+		div.flex-container
+		{
+			display:flex;
+			justify-content:flex-start;
+		}
+		span
+		{
+			/*display:block;*/
+			flex:0 0 auto;
+		}
+		legend, label, span.ISwitchspan > label
+		{
+			font-size:1.2vw;
+		}
+		input.INumber_wo
+		{
+			font-size:1.3vw;
+			min-width:6.0vw;
+		}
+		.ui-icon;
+		{
 
-	}
-
-	span#Telemetry fieldset > span.ITextspan
-	{
-		display:block;
-	}
-	fieldset#stTELEM
-	{
-		display:inline-block;
-		max-width:400px;
-	}
-	fieldset#stTELEM > span.ITextspan > label
-	{
-		display:inline-block;
-		min-width:150px;
-		padding-bottom:10px;
-	}
-	fieldset#stTELEM > span.ITextspan  textarea
-	{
-		max-width:120px;
-		font-size:0.9em;
-	}
-	fieldset#ACTIONS
-	{
-		max-width:200px;
-	}
-	span#Goto_Functions > fieldset
-	{
-	}
-	span#Goto_Functions > fieldset > span
-	{
-	}
-	.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button	
-	{
-		font-size:0.6em;
-	}
-	#Goto_Functions label, #Corrections label, #PEC label, #TLE label
-	{
-		font-size:0.6em;
-		font-weight:bold;
-		white-space:nowrap;
-	}
-	span#Telemetry #ACTIONS label
-	{
-		font-size:0.6em;
-	}
-	span.INumberspan
-	{
-		padding-right:10px;
-	}
-
-	.INDIgroup
-	{
-		margin-right:30px;
-		vertical-align: top;
-		Border:1px solid white;
-		margin:30px;
-		display:block;
-
-		display:flow-root;
-	}
-
-	
-	fieldset#MSTATUS
-	{
-		height:auto;
-	}
-
-	span#cur textarea, span#nxt textarea, span#com textarea
-	{
-		overflow:hidden;
-	}
-
-	span#cur label, span#nxt label, span#com label
-	{
-		display:inline-block;
-		min-width:7em;
-	}
-	body
-	{
-		/*background:#121212;*/
-		background:gray;
-	}
-
-	#tabs
-	{
-		height:600px;
-		width:65%;
-		overflow:scroll;
-		overflow-x:hidden;
-	}
-		
-	
-	.INumber_wo, .INumber_ro
-	{
-		display:block;
-	}
-
-	span#Guider_Control > fieldset.INDInvp > legend
-	{
-		display:None;
-	}
-	
-	fieldset.INDIsvp > span.ISwitchspan
-	{
-		display:Table;
-	}
-	
-	fieldset.INDIvp
-	{
-		vertical-align:top;
-	}
-	fieldset#LOWER_FNAMES > span.ITextspan, fieldset#UPPER_FNAMES > span.ITextspan, fieldset#GUIDER_FNAMES > span.ITextspan
-	{
-		display:flex;
-	}
-	
-	span.fwheel_pos, span.linear_pos
-	{
-		position:relative;
-		display:block;
-	}
-	
-	span.fwheel_pos > fieldset, span.linear_pos > fieldset
-	{
-		width:300px;
-		margin:15px;
-	}
-	span.fwheel_pos > fieldset > legend, span.linear_pos > fieldset > legend
-	{
-		display:none;
-	}
-	span#xypos
-	{
-		float:left;
-
-	}
-	.modebar
-	{
-      display: none !important;
-	}
+			display:none;
+			
+		}
+		fieldset#LFS.INDIsvp > span.ISwitchspan,
+		fieldset#UFS.INDIsvp > span.ISwitchspan,
+		fieldset#GFS.INDIsvp > span.ISwitchspan
+		{
+			display:inline;
+		}
+		fieldset#LFS.INDIsvp,
+		fieldset#UFS.INDIsvp,
+		fieldset#GFS.INDIsvp
+		{
+			min-width:250px;
+		}
+		fieldset#OFFSET_X,
+		fieldset#OFFSET_Y,
+		fieldset#OFFSET_FOCUS
+		{
+			min-width:63px;
+			margin:0px;
+		}
+		fieldset
+		{
+			margin:0px;
+		}
+		label, legend, .INDIgroup h3
+		{
+			color:white;
+		}
 	</style>
-	</head>
-	<body onload="main()" >
-	<!--	<div id="SNOOPER" class="INDIdevice"></div>
-	-->
-	<div class="INDIdevice" id="INDI-VATT-GUIDEBOX">
-		<div id="Guider_Control", class="INDIgroup">
-			<h3>Guider Control</h3>
-			<span id="xypos" style="width:400px; height:400px; display:inline-block"></span>
-			<span id="fwheel_span" style="float:left">
-				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="FWHEEL_UPPER" indigroup="Guider Control"></span>
-				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="FWHEEL_LOWER" indigroup="Guider Control"></span>
-				<span class="fwheel_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_FWHEEL" indigroup="Guider Control"></span>
-				<span indidevice="INDI-VATT-GUIDEBOX" indiname="LOWER_FNAMES" indigroup="Guider Control" style="display:default"></span>
-				<span indidevice="INDI-VATT-GUIDEBOX" indiname="UPPER_FNAMES" indigroup="Guider Control" style="display:default"></span>
-				<span indidevice="INDI-VATT-GUIDEBOX" indiname="GUIDER_FNAMES" indigroup="Guider Control" style="display:default"></span>
-			</span>
-
-			<span id="linear_span" style="float:left">
-				
-				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_X" indigroup="Guider Control"></span>
-				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_Y" indigroup="Guider Control"></span>
-				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_FOCUS" indigroup="Guider Control"></span>
-				<span class="linear_pos" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_MIRRORS" indigroup="Guider Control"></span>
-			</span>
-		</div>
-		<div id="tcont">
-
-		<div id="tabs" style="background:transparent">
-			  <ul>
-				<li><a href="#Motor_1_Eng">Motor 1</a></li>
-				<li><a href="#Motor_2_Eng">Motor 2</a></li>
-				<li><a href="#Motor_3_Eng">Motor 3</a></li>
-				<li><a href="#Motor_4_Eng">Motor 4</a></li>
-				<li><a href="#Motor_5_Eng">Motor 5</a></li>
-				<li><a href="#Motor_6_Eng">Motor 6</a></li>
-				<li><a href="#Motor_7_Eng">Motor 7</a></li>
-			</ul>
-			<div id="Motor_1_Eng" class="INDIgroup"></div>
-			<div id="Motor_2_Eng" class="INDIgroup"></div>
-			<div id="Motor_3_Eng" class="INDIgroup"></div>
-			<div id="Motor_4_Eng" class="INDIgroup"></div>
-			<div id="Motor_5_Eng" class="INDIgroup"></div>
-			<div id="Motor_6_Eng" class="INDIgroup"></div>
-			<div id="Motor_7_Eng" class="INDIgroup"></div>
-		</div>
-		</div>
-
+</head>
+<body onload="main()">
+	<div class="flex-container">
+		<span id="tipx" class="no-legend" indidevice="VATT Secondary" indigroup="Tip Tilt" indiname="PosV" title="Secondary Tip X"></span>
+		<span id="tipy" class="no-legend" indidevice="VATT Secondary" indigroup="Tip Tilt" indiname="PosU" title="Secondary Tip Y"></span>
+		<span id="focus" class="no-legend" indidevice="VATT Secondary" indigroup="Decenter" indiname="PosZ" title="Secondary Focus"></span>
+		<span class="stacker-span">
+			<span id="ref" class="no-legend stack" indidevice="VATT Secondary" indigroup="Miscellaneous" indiname="ref"></span>
+			<span id="corr" class="no-legend stack" indidevice="VATT Secondary" indigroup="Miscellaneous" indiname="correct"></span>
+		</span>
+		<span id="err" class="no-legend stack" indidevice="VATT Secondary" indigroup="Miscellaneous" indiname="err"></span>
+		<span id="connect" class="no-legend" indidevice="VATT Secondary" indigroup="Main Control" indiname="CONNECTION"></span>
 	</div>
-	<div id="filter_dialog" style"display:none"> 
+	<hr/>
+	<div class="flex-container">
+		<span id="xypos" style="width:299px; height:300px; display:inline-block;flex:none"></span>
+		<span class="stacker-span">
+		<span class="stack">
+			<span class="linear_pos no-legend" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_X" indigroup="Guider Control"></span>
+			<span class="linear_pos no-legend" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_Y" indigroup="Guider Control"></span>
+			<span class="linear_pos no-legend" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_FOCUS" indigroup="Guider Control"></span>
+		</span>
+		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="GFS" indigroup="Guider Control"></span>
+		<hr/>
+		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="LFS" indigroup="Guider Control"></span>
+		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="UFS" indigroup="Guider Control"></span>
+		</span>
+		<span class="stacker-span">
+		<span class="no-legend sbutton stack" indidevice="INDI-VATT-GUIDEBOX" indiname="CONNECTION" indigroup="Guider Control"></span>
+		<span class="linear_pos no-legend stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="MIRRORS" indigroup="Guider Control"></span>
+		<span class="no-legend sbutton stack" indidevice="INDI-VATT-GUIDEBOX" indiname="GUIDE_BOX_ACTIONS" indigroup="Guider Control"></span>
+		</span>
+	</div>
+	<textarea rows=3 cols=75 id="INDImsg"></textarea>	
+	
+	<div id="filter_dialog" style="display:none"> 
 		<input type="text" id="filter_name_input"> </input>
 		<script>
 				$("input#filter_name_input").keypress(function(event)
@@ -446,7 +370,6 @@
 						var re_info = re_iname.exec(indiname)
 						var wheel = re_info[1];
 						var fnum = re_info[2]
-						console.log("WTF MAN")
 						if(wheel == "L")
 						{
 							var sel = "fieldset#LFS > span#"+indiname +" >  label";
@@ -462,10 +385,11 @@
 						sendNewText({target:$(name_sel).get()});
 						$("input.filter_context").remove();
 						$("div#filter_dialog").dialog('close')
+						var name_sel = "fieldset#UPPER_FNAMES.INDItvp > span#F"+String(fnum)+" > textarea.IText_wo"
 					}
 				});
 		</script>
 	</div>
-	<textarea rows=3 cols=75 id="INDImsg"></textarea>
-	</body>
+
+</body>
 </html>

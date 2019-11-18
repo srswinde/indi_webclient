@@ -12,6 +12,13 @@ INDISWRULE_ATMOST1 = 1;
 INDISWRULE_NOFMANY = 2;
 
 
+CONFIG ={
+	NUM_SIZE:null,
+	SHOW_SWITCH_ICON:null
+	
+
+}
+
 /*********************
 * formatNumber
 * Args: numStr=>the number as a string
@@ -97,22 +104,24 @@ function collect()
 *
 *
 ******************************************/
-function INDIwebsocket(url, container, tabdevice)
+function INDIwebsocket(url, container, devicelist)
 {
 	if(url == undefined)
 	{
 		url = "ws://indiserver:3000"
 	}
 	
-	if (tabdevice == undefined)
+	if (devicelist == undefined)
 	{
-		tabdevice = false;
+		devicelist = [];
 	}
 
 
 	container = (container == "undefined")? "body" : container
+	devicelist = (devicelist == "undefined")? [] : devicelist
 	INDIws = new WebSocket( url );
 	INDIws.devices_container = container
+	INDIws.devicelist = devicelist;
 	INDIws.onerror = function(event)
 	{
 		$("#wsDialog").dialog("open").find('b').text(url);
@@ -132,6 +141,29 @@ function INDIwebsocket(url, container, tabdevice)
 		var ele = '';
 		var newData = false;
 		container = this.devices_container;
+
+		var baddevice = true;
+		if(this.devicelist.length > 0)
+		{//if devicelist isn't an empty array check it against incoming VP's
+			
+			for(dev in this.devicelist)
+			{
+				if( data.device == this.devicelist[dev] )
+				{
+					baddevice=false;
+					break;
+				}
+			}
+		}
+		else
+		{//... if it is an empty array allow all VP's.
+			baddevice=false;
+		}
+
+		if (baddevice)
+		{
+			return;
+		}
 		switch (data.metainfo)
 		{
 			case "newDevice":
@@ -407,10 +439,13 @@ function newNumber(INDIvp, appendTo)
 				}
 				catch(err)
 				{
-					var len=5;
+					var len = 5;
+				}
+				if(CONFIG["NUM_SIZE"] != null)
+				{
+					len=CONFIG["NUM_SIZE"];
 				}
 				var ro = $('<span/>', {'class':'INumber_ro'}).css({ width:10*len+'px' })
-					
 				var wo = $("<input/>", {'type':'text', 'class':'INumber_wo'}).prop('size',len)
 				.attr("value", np.value )
 				.keypress(function(event)
@@ -544,8 +579,12 @@ function newSwitch( INDIvp, appendTo )
 			));
 			
 		});
-
-		vphtmldef.find( "input[type='"+type+"']" ).checkboxradio();
+		icon=true;
+		if(CONFIG["SHOW_SWITCH_ICON"] != null)
+		{
+			var icon = CONFIG["SHOW_SWITCH_ICON"]
+		}
+		vphtmldef.find( "input[type='"+type+"']" ).checkboxradio({icon:icon});
 
 		if( appendTo != undefined )
 		{
@@ -557,6 +596,7 @@ function newSwitch( INDIvp, appendTo )
 
 	else
 	{
+		
 		$.each(INDIvp.sp, function(ii, sp)
 		{
 			var label = sp.label.replace(" ", "_");
@@ -564,9 +604,11 @@ function newSwitch( INDIvp, appendTo )
 			var spid = nosp_dev +"__"+ name;
 			var state = sp.state
 			$(vpselector).find('input.ISwitchinput#'+spid).prop('checked', sp.state);
-			
+			if(label.slice(0,3) == "123")
+				console.log(label)
 			//console.log($("body fieldset.INDIsvp#"+nosp_vpname+"[device='"+INDIvp.device+"']"))
 		});
+		
 	}
 	$(vpselector).find("input[type='"+type+"']").checkboxradio("refresh");
 	return vpselector;
@@ -716,7 +758,7 @@ function newLight( INDIvp, appendTo )
 function sendNewSwitch(event)
 {
 	var fs = $(event.target).closest(".INDIsvp")
-	
+	console.log(event.target);
 	var out = {
 		"task":"updateSwitch",
 		"newSwitch":{
@@ -796,7 +838,6 @@ function sendNewNumber(event)
 function sendNewText(event)
 {
 	var ft = $(event.target).closest(".INDItvp");
-	console.log(event.target);
 	var IText = $(event.target);
 	var out = {
 		"task":"updateText",
@@ -810,7 +851,6 @@ function sendNewText(event)
 
 	ft.find("textarea.IText_wo").each(function( ii, tp ) 
 	{
-		console.log($(IText).closest(".IText"));
 		out.newText.tp.push(
 		{
 			"name":$(IText).closest("span.ITextspan").attr("INDIname"),
