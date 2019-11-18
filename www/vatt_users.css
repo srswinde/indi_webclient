@@ -1,6 +1,6 @@
 label, legend, .INDIgroup h3
 {
-	color:lightblue;
+	color:white;
 	font-weight:bold;
 }
 fieldset#ACTIONS
@@ -62,7 +62,10 @@ body
 {
 	display:block;
 }
-
+.INumber_ro
+{
+	color:white;
+}
 fieldset.INDIsvp > span.ISwitchspan
 {
 	display:Table;

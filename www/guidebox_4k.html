@@ -4,7 +4,7 @@
 	 <meta charset="UTF-8">
 	<script src="plotly/plotly-latest.min.js"></script>
 
-	<Title> VATT4K Guidebox and Secondary</Title>
+	<Title> VATTSPEC Guidebox and Secondary</Title>
 	
 	<link rel="stylesheet" href="indi.css">
 	<script src="jquery-1.12.4.js"></script>
@@ -25,7 +25,21 @@
 		setTimeout(idleProc, 1000);
 
 	}	
-	
+
+	/*******************************************
+	 *Name: idleProc
+	 *Description: In general this function is 
+	 *	meant to be used as an idol time
+	 *	function to do whatever may be needed.
+	 *	It is called again with the setTimeout
+	 *	function. For this page it is called
+	 *	until the filter wheel buttons
+	 *	show up and then it binds a right
+	 *	click event so the user can change
+	 *	the name of the filter. 
+	 *
+	 ******************************************/
+
 	function idleProc()
 	{
 		var lfs_sel = "fieldset#LFS.INDIsvp"
@@ -70,6 +84,17 @@
 			});
 		})
 	}
+
+	/**************************************************
+	 * Name: postProc
+	 * Description: This function is called by indi.js
+	 *	anytime there is a new INDI vector property
+	 * 	or an update to the existing property. This 
+	 *	is a space where you can customize the placement
+	 *	and some of the behavior of the widgets. It returns
+	 *	a jquery selector string that indi.js will then append
+	 *	the new widget to the selector. 
+	 *******************************************************/
 	function postProc(INDIvp, ele)
 	{
 		var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
@@ -260,6 +285,7 @@
 		input.INumber_wo
 		{
 			font-size:1.3vw;
+			min-width:6.0vw;
 		}
 		.ui-icon;
 		{
@@ -292,7 +318,7 @@
 		}
 		label, legend, .INDIgroup h3
 		{
-			color:#0000ff;
+			color:white;
 		}
 	</style>
 </head>
@@ -319,8 +345,8 @@
 		</span>
 		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="GFS" indigroup="Guider Control"></span>
 		<hr/>
-		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="UFS" indigroup="Guider Control"></span>
 		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="LFS" indigroup="Guider Control"></span>
+		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="UFS" indigroup="Guider Control"></span>
 		</span>
 		<span class="stacker-span">
 		<span class="no-legend sbutton stack" indidevice="INDI-VATT-GUIDEBOX" indiname="CONNECTION" indigroup="Guider Control"></span>
@@ -359,6 +385,7 @@
 						sendNewText({target:$(name_sel).get()});
 						$("input.filter_context").remove();
 						$("div#filter_dialog").dialog('close')
+						var name_sel = "fieldset#UPPER_FNAMES.INDItvp > span#F"+String(fnum)+" > textarea.IText_wo"
 					}
 				});
 		</script>

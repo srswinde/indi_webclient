@@ -604,12 +604,13 @@ function newSwitch( INDIvp, appendTo )
 			var spid = nosp_dev +"__"+ name;
 			var state = sp.state
 			$(vpselector).find('input.ISwitchinput#'+spid).prop('checked', sp.state);
-			
+			if(label.slice(0,3) == "123")
+				console.log(label)
 			//console.log($("body fieldset.INDIsvp#"+nosp_vpname+"[device='"+INDIvp.device+"']"))
 		});
 		
 	}
-	//$(vpselector).find("input[type='"+type+"']").checkboxradio("refresh");
+	$(vpselector).find("input[type='"+type+"']").checkboxradio("refresh");
 	return vpselector;
 }
 
@@ -757,7 +758,7 @@ function newLight( INDIvp, appendTo )
 function sendNewSwitch(event)
 {
 	var fs = $(event.target).closest(".INDIsvp")
-	
+	console.log(event.target);
 	var out = {
 		"task":"updateSwitch",
 		"newSwitch":{
@@ -837,7 +838,6 @@ function sendNewNumber(event)
 function sendNewText(event)
 {
 	var ft = $(event.target).closest(".INDItvp");
-	console.log(event.target);
 	var IText = $(event.target);
 	var out = {
 		"task":"updateText",
@@ -851,7 +851,6 @@ function sendNewText(event)
 
 	ft.find("textarea.IText_wo").each(function( ii, tp ) 
 	{
-		console.log($(IText).closest(".IText"));
 		out.newText.tp.push(
 		{
 			"name":$(IText).closest("span.ITextspan").attr("INDIname"),

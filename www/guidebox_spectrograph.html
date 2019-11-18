@@ -14,6 +14,8 @@
 	<script src="indi/indi.js"></script>
 
 	<script>
+
+	
 	function main()
 	{
 		CONFIG["NUM_SIZE"] = 1;
@@ -21,10 +23,35 @@
 		var host = location.host.split(":")[0];
 		var url="ws://"+host+":3001";
 		INDIwebsocket(url, 'body', ["INDI-VATT-GUIDEBOX", "VATT Secondary"]);
+		connectionDetect();
 		setTimeout(idleProc, 1000);
 
-	}	
-	
+	}
+
+	function connectionDetect()
+	{
+		var conn_sel = "fieldset#CONNECTION.INDIsvp"
+		console.log( $(conn_sel).length );
+		setTimeout(connectionDetect, 2000);
+
+			
+	}
+
+
+
+	/*******************************************
+	 *Name: idleProc
+	 *Description: In general this function is 
+	 *	meant to be used as an idol time
+	 *	function to do whatever may be needed.
+	 *	It is called again with the setTimeout
+	 *	function. For this page it is called
+	 *	until the filter wheel buttons
+	 *	show up and then it binds a right
+	 *	click event so the user can change
+	 *	the name of the filter. 
+	 *
+	 ******************************************/
 	function idleProc()
 	{
 		var lfs_sel = "fieldset#LFS.INDIsvp"
@@ -69,6 +96,17 @@
 			});
 		})
 	}
+
+	/**************************************************
+	 * Name: postProc
+	 * Description: This function is called by indi.js
+	 *	anytime there is a new INDI vector property
+	 * 	or an update to the existing property. This 
+	 *	is a space where you can customize the placement
+	 *	and some of the behavior of the widgets. It returns
+	 *	a jquery selector string that indi.js will then append
+	 *	the new widget to the selector. 
+	 *******************************************************/
 	function postProc(INDIvp, ele)
 	{
 		var devselector = "div.INDIdevice#"+nosp(INDIvp.device);
@@ -163,11 +201,13 @@
 		}
 		legend, label, span.ISwitchspan > label
 		{
-			font-size:2.0vw;
+			font-size:1.8vw;
+		
 		}
 		input.INumber_wo
 		{
-			font-size:2.0vw;
+			font-size:1.3vw;
+			min-width:6.0vw;
 		}
 		.ui-icon;
 		{
@@ -186,6 +226,7 @@
 		fieldset#GFS.INDIsvp
 		{
 			min-width:250px;
+
 		}
 		fieldset#OFFSET_X,
 		fieldset#OFFSET_Y,
@@ -200,7 +241,7 @@
 		}
 		label, legend, .INDIgroup h3
 		{
-			color:#0000ff;
+			color:white;
 		}
 	</style>
 </head>
@@ -259,6 +300,7 @@
 						sendNewText({target:$(name_sel).get()});
 						$("input.filter_context").remove();
 						$("div#filter_dialog").dialog('close')
+						window.setTimeout(window.location.reload.bind(window.location), 200);
 					}
 				});
 		</script>
