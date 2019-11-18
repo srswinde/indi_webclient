@@ -8,7 +8,7 @@ This is an INDI client for the web. It has two parts:
 
  
 ### The INDI client (webclient.cpp) ###
-The INDI client is written in c++ using the {indilib client API](http://www.indilib.org/api/classINDI_1_1BaseClient.html).
+The INDI client is written in c++ using the [indilib client API](http://www.indilib.org/api/classINDI_1_1BaseClient.html).
 It acts as a bridge between the javascript/html based webpage and the low level socket based indiserver. It converts 
 the indiserver data to JSON strings for the webpage and converts json webpage data back into the INDI format for the
 indiserver. All of the websocket stuff is handled by [websocketd](https://github.com/joewalnes/websocketd) so webclient.cpp
