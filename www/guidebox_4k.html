@@ -4,7 +4,7 @@
 	 <meta charset="UTF-8">
 	<script src="plotly/plotly-latest.min.js"></script>
 
-	<Title> VATTSPEC Guidebox and Secondary</Title>
+	<Title> VATT4K Guidebox and Secondary</Title>
 	
 	<link rel="stylesheet" href="indi.css">
 	<script src="jquery-1.12.4.js"></script>
@@ -38,6 +38,24 @@
 	 *	click event so the user can change
 	 *	the name of the filter. 
 	 *
+	 *	This function has kind of gotten out of
+	 *	hand. Initially I only wanted
+	 *	it to do what the above paragraph mentions.
+	 *	Now it is a catch all for doing stuff 
+	 *	when the indi vector properties arrive.
+	 * 	I assume that if the three VP's lfs, 
+	 *	ufs and gfs have arrived then they all
+	 *	have arrived and I can manipulate them 
+	 *	as I please. So far this assumption has
+	 *	proven to be true. However, it is possible
+	 *	that some VP's arrive before others and 
+	 *	that is a race condition. It should 
+	 *	be rare and the fix would be reloading the 
+	 *	page. 
+	 *
+	 * Scott 12/2019
+	 *
+
 	 ******************************************/
 
 	function idleProc()
@@ -55,9 +73,101 @@
 				return;
 			}
 		}
-		$("#OFFSET_X > label").text("Offset X")
-		$("#OFFSET_Y > label").text("Offset Y")
-		$("#OFFSET_FOCUS > label").text("FOCUS")
+
+		//Check for good values as soon as someon types them
+		$("span#OFFSET_X.INumberspan > input.INumber_wo").keyup(
+			function()
+			{
+				var val = parseFloat($(this).val())
+				if (isNaN(val))
+				{//It is a bad value unbind the sendNewNumber event
+					$(this).css("background", "red"); 
+					$(this).off("keypress"); 
+				}
+				else if(val > -90 && val < 90)
+				{//Its a good value rebind the sendNewNumber
+					$(this).css("background", "white");
+					$(this).keypress(
+					function(event)
+					{
+						if(event.which == 13)	
+						{
+							sendNewNumber(event)
+							return false;
+						}
+
+					}); 
+				}
+				else
+				{//It is a bad value unbind the sendNewNumber event
+					$(this).css("background", "red"); 
+					$(this).off("keypress"); 
+				}
+			});	
+	
+		$("span#OFFSET_Y.INumberspan > input.INumber_wo").keyup(
+			function()
+			{
+				var val = parseFloat($(this).val())
+				if (isNaN(val))
+				{
+					$(this).css("background", "red"); 
+					$(this).off("keypress"); 
+				}
+				else if(val > -30 && val < 80)
+				{
+					$(this).css("background", "white");	
+					$(this).keypress(
+					function(event)
+					{
+						if(event.which == 13)	
+						{
+							sendNewNumber(event)
+							return false;
+						}
+
+					}); 
+
+				}
+				else
+				{
+					$(this).css("background", "red"); 
+					$(this).off("keypress"); 
+				}
+			});
+		$("span#OFFSET_FOCUS.INumberspan > input.INumber_wo").keyup(
+			function()
+			{
+				var val = parseFloat($(this).val())
+				if (isNaN(val))
+				{
+					$(this).css("background", "red"); 
+					$(this).off("keypress"); 
+				}
+				else if(val > -32 && val < 32)
+				{
+					$(this).css("background", "white");	
+					$(this).keypress(
+					function(event)
+					{
+						if(event.which == 13)	
+						{
+							sendNewNumber(event)
+							return false;
+						}
+
+					}); 
+
+				}
+				else
+				{
+					$(this).css("background", "red"); 
+					$(this).off("keypress"); 
+				}
+			});
+
+		$("span#INITIALIZE.ISwitchspan").prop("title", "Initializes or resets the guidebox. This will cause you to loose position. This should not normally be used unless a motor is in a software limit and won't move.")
+		$("span#HOME.ISwitchspan").prop("title", "Refrences or homes the guidebox motors. This should only need to be done once after a lightning shutdown.")
 		//The below .each function iterates through
 		// all the filter wheel switches and allows
 		// you to bind a right click event to them 
@@ -182,7 +292,7 @@
 			margin: { t: 0 },
 			xaxis: {range:[-100,100], fixedrange: true},
 			yaxis: {range:[-70,120], fixedrange: true},
-			paper_bgcolor:'rgba(0,0,0,0.5)',
+			paper_bgcolor:'rgba(0,0,0,1.0)',
             plot_bgcolor:'rgba(0,0,0,0)',
 			shapes:[{
 				type:"rect",
@@ -200,7 +310,7 @@
 		
 
 		UMIRROR = document.getElementById('xypos');
-		Plotly.plot( UMIRROR, line1, layout);		
+		Plotly.plot( UMIRROR, line1, layout, {displayModeBar:false});		
 		var xaxis = UMIRROR._fullLayout.xaxis;
 		var yaxis = UMIRROR._fullLayout.yaxis;
 		var l = UMIRROR._fullLayout.margin.l;
@@ -210,8 +320,8 @@
 				d3.event.preventDefault()
 				var point = d3.mouse(this);
 				p = {x: point[0]-(180), y: 100-point[1] };
-				$("span#OFFSET_X.INumberspan > input.INumber_wo").val(parseInt(p.x));
-				$("span#OFFSET_Y.INumberspan > input.INumber_wo").val(parseInt(p.y));
+				//$("span#OFFSET_X.INumberspan > input.INumber_wo").val(parseInt(p.x));
+				//$("span#OFFSET_Y.INumberspan > input.INumber_wo").val(parseInt(p.y));
 			} )
 			
 			
@@ -220,8 +330,12 @@
 			{
 				var x = xaxis.p2c(evt.x - l);
 				var y = yaxis.p2c(evt.y - t);
-				$("span#OFFSET_X.INumberspan > input.INumber_wo").val(parseInt(x));
-				$("span#OFFSET_Y.INumberspan > input.INumber_wo").val(parseInt(y));
+
+				//I don't know why there is an offset
+				// of -13,22 but there is and we correct 
+				// it here. 
+				//$("span#showx").text(parseInt(x)-13.0);
+				//$("span#showy").text(parseInt(y)+22.0);
 
 			})
 			setTimeout(updatexy, 1000);
@@ -240,7 +354,6 @@
 		}	
 		else
 		{
-			console.log(xpos, ypos);
 			var update={
 				shapes:[{
 					type:"rect",
@@ -286,6 +399,10 @@
 		{
 			font-size:1.3vw;
 			min-width:6.0vw;
+		}
+		span.INumber_ro
+		{
+			font-size:1.3vw;
 		}
 		.ui-icon;
 		{
@@ -336,7 +453,11 @@
 	</div>
 	<hr/>
 	<div class="flex-container">
-		<span id="xypos" style="width:299px; height:300px; display:inline-block;flex:none"></span>
+		<span class="stacker-span">
+			<span class="stack">
+				<span id="xypos" style="width:299px; height:300px; display:inline-block;flex:none"></span>
+			</span>
+		</span>
 		<span class="stacker-span">
 		<span class="stack">
 			<span class="linear_pos no-legend" indidevice="INDI-VATT-GUIDEBOX" indiname="OFFSET_X" indigroup="Guider Control"></span>
@@ -345,11 +466,12 @@
 		</span>
 		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="GFS" indigroup="Guider Control"></span>
 		<hr/>
-		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="LFS" indigroup="Guider Control"></span>
 		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="UFS" indigroup="Guider Control"></span>
+		<span class="fwheel_pos stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="LFS" indigroup="Guider Control"></span>
 		</span>
 		<span class="stacker-span">
 		<span class="no-legend sbutton stack" indidevice="INDI-VATT-GUIDEBOX" indiname="CONNECTION" indigroup="Guider Control"></span>
+		<span class="no-legend sbutton stack" indidevice="INDI-VATT-GUIDEBOX" indiname="AUTOFOC" indigroup="Guider Control"></span>
 		<span class="linear_pos no-legend stack"  indidevice="INDI-VATT-GUIDEBOX" indiname="MIRRORS" indigroup="Guider Control"></span>
 		<span class="no-legend sbutton stack" indidevice="INDI-VATT-GUIDEBOX" indiname="GUIDE_BOX_ACTIONS" indigroup="Guider Control"></span>
 		</span>
@@ -386,6 +508,7 @@
 						$("input.filter_context").remove();
 						$("div#filter_dialog").dialog('close')
 						var name_sel = "fieldset#UPPER_FNAMES.INDItvp > span#F"+String(fnum)+" > textarea.IText_wo"
+						location.reload();
 					}
 				});
 		</script>
