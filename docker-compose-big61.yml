@@ -20,11 +20,14 @@ services:
 
         
         indidriver:
-                image: "srswinde/indidrivers"
+                image: "srswinde/indidrivers:bigpop"
                 ports:
                         - "7624:7624"
                 network_mode: "host"
+                environment:
+                        - NGINDI_DRVCFG=/conf/kuiper.conf
                 command:
+                        #/usr/bin/indiserver  -v /driverbin/tcs-indi /driverbin/snooper
                         /usr/bin/indiserver  -v /driverbin/tcs-indi /driverbin/dome-indi /driverbin/focus-indi /driverbin/snooper
 
 #        browser:
