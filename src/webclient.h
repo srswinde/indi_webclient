@@ -87,5 +87,7 @@ class MyClient : public INDI::BaseClient
 	json jsonify(INumberVectorProperty *);
 	json jsonify(ITextVectorProperty *);
 	json jsonify(ILightVectorProperty *);
+    json jsonify(IBLOBVectorProperty *);
 	json jsonify( std::string, const char *);
+    json jsonify( IBLOB* );
 };

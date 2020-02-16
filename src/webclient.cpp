@@ -12,6 +12,8 @@
 #include <sstream>
 #include <ostream>
 #include <unistd.h>
+#include "base64.h"
+
 using json = nlohmann::json;
 #include "webclient.h"
 bool test = true;
@@ -70,7 +72,7 @@ void WSthread(ComQ *websocQ, ComQ  *driverQ)
 		std::string input;
 		json inj;
 		
-		getline(std::cin, input)	;
+		getline(std::cin, input);
 
 
 		try
@@ -180,7 +182,10 @@ void MyClient::newProperty(INDI::Property *property)
 	ITextVectorProperty *tvp;
 	INumberVectorProperty *nvp;
 	ILightVectorProperty *lvp;
+	IBLOBVectorProperty *bvp;
 	json indijson;
+
+
 	switch(property->getType())
 	{
 		case INDI_SWITCH:
@@ -204,9 +209,15 @@ void MyClient::newProperty(INDI::Property *property)
 			 indijson = jsonify(lvp);
 			 clientQ->push(&indijson);
 		break;
+		case INDI_BLOB:
+			 bvp = property->getBLOB();
+			 indijson = jsonify(bvp);
+			 clientQ->push(&indijson);
+			 web_client->setBLOBMode( B_ALSO, bvp->device, bvp->name);
+			 
 
 		default:
-			std::cout << "{Error: \"could not understand INDI Property.\"}" << std::endl;
+			std::cout << "{\"Error\": \"could not understand INDI Property.\"}" << std::endl;
 	}
 	
 
@@ -248,7 +259,6 @@ void MyClient::newLight(ILightVectorProperty *lvp)
 		
 		json jlvp = jsonify(lvp);
 		clientQ->push(&jlvp);
-		//std::cerr << "New mother fucking light" <<std::endl;
 
 }
 
@@ -270,15 +280,10 @@ void MyClient::newMessage(INDI::BaseDevice *dp, int messageID)
 void MyClient::newBLOB(IBLOB *bp)
 {
     // Save FITS file to disk
-    std::ofstream myfile;
-
-    myfile.open("ccd_simulator.fits", std::ios::out | std::ios::binary);
-
-    myfile.write(static_cast<char *>(bp->blob), bp->bloblen);
-
-    myfile.close();
-
-    IDLog("Received image, saved as ccd_simulator.fits\n");
+	//json jbvp = jsonify( bp );
+	json jbp = jsonify(bp);
+	clientQ->push(&jbp);
+	
 }
 
 
@@ -442,10 +447,87 @@ void * 	aux
 		jlvp["lp"][ii]["name"] = lp->name;
 		jlvp["lp"][ii]["label"] = lp->label;
 		jlvp["lp"][ii]["s"] = lp->s;
-		//std::cerr << lp->name << " " << lp->label << " " << lp->s <<std::endl;
 	}
 
 	return jlvp;
+
+}
+
+
+json MyClient::jsonify(IBLOBVectorProperty *bvp)
+{
+/*
+
+char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPerm 	p
+double 	timeout
+IPState 	s
+IBLOB * 	bp
+int 	nbp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux
+*/
+	json jbvp;
+	IBLOB *bp;
+	jbvp["metainfo"] = "bvp";
+	jbvp["device"] = bvp->device;
+	jbvp["name"] = bvp->name;
+	jbvp["label"] = bvp->label;
+	jbvp["group"] = bvp->group;
+	jbvp["perm"] = bvp->p;
+	jbvp["timeout"] = bvp->timeout;
+	jbvp["state"] = bvp->s;
+	jbvp["timestsamp"] = "";
+	for(int ii=0; ii<bvp->nbp; ii++)
+	{
+		bp=bvp->bp+ii;
+		jbvp["bp"][ii]["name"] = bp->name;
+		jbvp["bp"][ii]["label"] = bp->label;
+		jbvp["bp"][ii]["format"] = bp->format;
+		jbvp["bp"][ii]["bloblen"] = bp->bloblen;
+		jbvp["bp"][ii]["size"] = bp->size;
+		
+	}
+
+	return jbvp;
+
+}
+
+json MyClient::jsonify(IBLOB *bp)
+{
+/*
+
+char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPerm 	p
+double 	timeout
+IPState 	s
+IBLOB * 	bp
+int 	nbp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux
+*/
+		json jbp;
+
+		unsigned char * blobdata = static_cast<unsigned char *> (bp->blob);
+		unsigned char *ubase64 = (unsigned char *) malloc(4*bp->size/3);
+		char * base64;
+		int size = to64frombits( ubase64, blobdata, bp->size);
+		base64 = (char *) ubase64;
+		jbp["metainfo"] = "blob";
+		jbp["name"] = bp->name;
+		jbp["label"] = bp->label;
+		jbp["format"] = bp->format;
+		jbp["size"] = bp->size;
+		jbp["blob"] = base64;
+		
+		return jbp;
+	
 
 }
 
@@ -552,7 +634,7 @@ void MyClient::Update(json data)
 		grpname = data["newText"]["group"];
 		propname = data["newText"]["name"];
 		dev = getDevice(devname.c_str());
-		tvp = dev->getText( propname.c_str());
+		tvp = dev->getText( propname.c_str() );
 		
 		for(unsigned int ii=0; ii<data["newText"]["tp"].size(); ii++)
 		{
@@ -577,6 +659,7 @@ int main(int argc, char ** argv )
 	//web_client->watchProperty("TCS-NG-INDI", "SERVICE_POSITIONS");
 	//web_client->watchProperty("TCS-NG-INDI", "CONNECTION");
 
+	
 	web_client->setQ(&webQ);
 	web_client->setDevQ(&driverQ);
 	if(argc == 2)
@@ -588,7 +671,7 @@ int main(int argc, char ** argv )
 
     
 	
-    	while(web_client->connectServer() == false)
+    while(web_client->connectServer() == false)
 	{
 		usleep(2e6);
 	}
