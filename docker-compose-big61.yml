@@ -1,7 +1,7 @@
 version: '3'
 services:
         webclient:
-                image: "srswinde/indi_webclient"
+                image: "srswinde/indi_webclient:test"
                 ports: 
                         - "3000:3000"
                 environment:
