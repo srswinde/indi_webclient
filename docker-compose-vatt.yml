@@ -27,13 +27,12 @@ services:
                 # -Scott May 2019
                 
                 
-                #                image:  "srswinde/indihex:stable"
-                image: "srswinde/indihex:vatttel_not_on"
+                image: "srswinde/indiserver"
                 ports:
                         - "7624:7624"
-                command: /usr/bin/indiserver -v /driver/build/sdev
+                command: /usr/bin/indiserver -v /src/main.py
                 volumes:
                         - "/home/scott/.mtnops/docker-volumes/indihex/posfile.d:/data/"
-                network_mode: host
+                
 
 

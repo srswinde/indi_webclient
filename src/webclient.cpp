@@ -16,6 +16,9 @@
 
 using json = nlohmann::json;
 #include "webclient.h"
+
+#define CHUNKSIZE 20000
+
 bool test = true;
 
 /* Our client auto pointer */
@@ -27,7 +30,7 @@ void ComQ::push(json *data)
 	counter++;
 	std::lock_guard<std::mutex> lock(qutex);
 	q.push( data->dump() );
-	if( q.size() > 500 )
+	if( q.size() > 50 )
 		q.pop();
 }
 
@@ -66,7 +69,8 @@ void WSthread(ComQ *websocQ, ComQ  *driverQ)
 {
 
 
-	char buff[5000];
+	int ii;
+	std::string data;
 	while (websocQ->connected)
 	{
 		std::string input;
@@ -95,8 +99,16 @@ void WSthread(ComQ *websocQ, ComQ  *driverQ)
 			if(websocQ->size() > 0)	
 			{
 				
-				strcpy( buff, websocQ->front().c_str() );
-				std::cout << buff << std::endl;
+				//strcpy( buff, websocQ->front().c_str() );
+				data = websocQ->front();
+				for(ii=0; ii<((int)data.size()-CHUNKSIZE); ii+=CHUNKSIZE)
+				{
+					
+					std::cout << data.substr(ii, CHUNKSIZE) << std::endl;
+					
+				}
+				std::cout << data.substr(ii, data.size()) << std::endl;
+
 				websocQ->pop( );
 			}
 			usleep( (int) 250);
@@ -210,14 +222,17 @@ void MyClient::newProperty(INDI::Property *property)
 			 clientQ->push(&indijson);
 		break;
 		case INDI_BLOB:
-			 bvp = property->getBLOB();
-			 indijson = jsonify(bvp);
-			 clientQ->push(&indijson);
-			 web_client->setBLOBMode( B_ALSO, bvp->device, bvp->name);
+			bvp = property->getBLOB();
+			indijson = jsonify(bvp);
+			clientQ->push(&indijson);
+			web_client->setBLOBMode( B_ALSO, bvp->device, bvp->name);
 			 
 
 		default:
-			std::cout << "{\"Error\": \"could not understand INDI Property.\"}" << std::endl;
+			indijson["Error"] = "Could Not understand INDI property";
+			indijson["name"] = property->getName();
+			indijson["device"] = property->getDeviceName();
+			//clientQ->push(&indijson);
 	}
 	
 
@@ -279,8 +294,7 @@ void MyClient::newMessage(INDI::BaseDevice *dp, int messageID)
 ***************************************************************************************/
 void MyClient::newBLOB(IBLOB *bp)
 {
-    // Save FITS file to disk
-	//json jbvp = jsonify( bp );
+
 	json jbp = jsonify(bp);
 	clientQ->push(&jbp);
 	
@@ -517,7 +531,7 @@ void * 	aux
 		unsigned char * blobdata = static_cast<unsigned char *> (bp->blob);
 		unsigned char *ubase64 = (unsigned char *) malloc(4*bp->size/3);
 		char * base64;
-		int size = to64frombits( ubase64, blobdata, bp->size);
+		to64frombits( ubase64, blobdata, bp->size);
 		base64 = (char *) ubase64;
 		jbp["metainfo"] = "blob";
 		jbp["name"] = bp->name;
@@ -525,6 +539,10 @@ void * 	aux
 		jbp["format"] = bp->format;
 		jbp["size"] = bp->size;
 		jbp["blob"] = base64;
+		//jbp["size"] = 0;
+		//jbp["blob"] = "";
+		std::cerr << "newBLOB yeah!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		
 		
 		return jbp;
 	

@@ -7,9 +7,10 @@ services:
                 environment:
                         - INDISERVER=localhost
                 
-                network_mode: "host"
+                
                 command:
-                        ["/webclient/websocketd", "--address", "0.0.0.0", "--port", "3000", "--devconsole", "/webclient/webclient", "localhost"]
+                        ["/webclient/websocketd", "--address", "0.0.0.0", "--port", "3000", "--devconsole", "/webclient/webclient", "indiserver"]
+                
 
         nginx-server:
                 image: "nginx"
@@ -17,8 +18,28 @@ services:
                         - "4001:80"
                 volumes:
                         - "./www:/usr/share/nginx/html"
+                
 
-        
+        indiserver:
+                # stable tag was a version with no error
+                # message if vatttel was not communicating
+                # We should move the vatttel_not_on
+                # to stable when we are sure the
+                # update fix doesn't cause any issues
+                # -Scott May 2019
+                 
+                
+                #                image:  "srswinde/indihex:stable"
+                image: "srswinde/indiserver"
+                ports:
+                        - "7624:7624"
+                command: "/usr/bin/indiserver -v -r 0 /src/main.py"
+                volumes:
+                        - "//C/Users/srswi/git-clones/pyINDI/src:/src"
+
+
+                
+               
 #        indidriver:
 #                image: "srswinde/indidrivers"
 #                ports:
