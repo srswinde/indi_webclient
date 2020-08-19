@@ -13,7 +13,8 @@
 	<script>
 	function main()
 	{
-		var url="ws://"+location.host+":3000";
+		var host = location.host.split(":")[0];
+		var url="ws://"+host+":3000";
 		INDIwebsocket(url, 'body');
 	}	
 
@@ -25,7 +26,6 @@
 
 		if( $(devselector).length == 0 )
 		{
-			console.log("creating container")
 			$("<div/>", {id:nosp(INDIvp.device)}).addClass("INDIdevice").appendTo("#body");
 		}
 		if( $(grpselector).length == 0 )
@@ -48,34 +48,7 @@
 			$("<span/>", {id:nosp(INDIvp.group)}).addClass("INDIgroup").appendTo(devselector)
 			$(grpselector).append("<h3>"+INDIvp.group+"</h3>").controlgroup();
 		}
-		if(INDIvp.metainfo == "svp")
-			var prop="background-color";
-		else
-			var prop="color"
-		switch(INDIvp.state)
-		{
-
-			case(INDISTATE_IDLE ):
-				$(ele).css(prop, 'var( --indistate-idle )')
-				$(ele).find("textarea").css("color", 'var( --indistate-idle )')
-			break;
-			case(INDISTATE_OK ):
-				$(ele).css(prop, 'var( --indistate-ok )')
-				$(ele).find("textarea").css("color", 'var( --indistate-ok)')
-			break;
-			case(INDISTATE_BUSY ):
-				$(ele).css(prop, 'var( --indistate-busy )')
-				$(ele).find("textarea").css("color", 'var( --indistate-busy )')
-			break;
-			case(INDISTATE_ALERT ):
-				$(ele).css(prop, 'var( --indistate-alert )')
-				$(ele).find("textarea").css("color", 'var( --indistate-alert )')
-			break;
-			default:
-				console.log("idk", data.name, data.state);
-		}
-
-
+		
 		var oselector =  $("span[indidevice='"+INDIvp.device+"'][indiname='"+INDIvp.name+"'][indigroup='"+INDIvp.group+"']");
 
 		if ($(oselector).length==1)
@@ -88,9 +61,9 @@
 		}
 		else
 		{
-			return "body"
+			var rtn = "body"
 		}
-		return rtn
+		return $("body")
 	}
 
 	$( function() 
@@ -116,10 +89,6 @@
 	{
 		color:lightblue;
 		font-weight:bold;
-	}
-	.IText_ro
-	{
-		overflow: hidden;
 	}
 	span#Telemetry
 	{
@@ -191,7 +160,10 @@
 	}
 
 	
-	
+	fields#MSTATUS
+	{
+		height:auto;
+	}
 
 	fieldset#eqTELEM > span#div,  
 	fieldset#eqTELEM > span#desc, 
@@ -221,7 +193,8 @@
 	}
 	body
 	{
-		background:#121212;
+		/*background:#121212;*/
+		background:gray;
 	}
 	div#SNOOPER
 	{
@@ -251,7 +224,7 @@
 	</style>
 	</head>
 	<body onload="main()" >
-		<div id="SNOOPER" class="INDIdevice"></div>
+	<!--	<div id="SNOOPER" class="INDIdevice"></div>
 		<div id="tcont">
 
 		<div id="tabs" >
@@ -265,6 +238,7 @@
 			<div id="FOCUS-NG-INDI" class="INDIdevice"></div>
 		</div>
 		</div>
-		<textarea rows=3 cols=75 id="INDImsg"></textarea>
+	-->
+	<textarea rows=3 cols=75 id="INDImsg"></textarea>
 	</body>
 </html>

@@ -1,8 +1,7 @@
 version: '3'
 services:
         webclient:
-
-                image: "srswinde/indi_webclient:test"
+                image: "srswinde/indi_webclient:lvp"
                 ports: 
                         - "3000:3000"
                 environment:
@@ -20,14 +19,14 @@ services:
                         - "./www:/usr/share/nginx/html"
 
         
-        indidriver:
-                image: "srswinde/indidrivers"
-                ports:
-                        - "7624:7624"
-                network_mode: "host"
-                command:
-                        /usr/bin/indiserver  -vvv /driverbin/tcs-indi
-                        #/usr/bin/indiserver  -vvv /driverbin/tcs-indi /driverbin/dome-indi /driverbin/focus-indi /driverbin/snooper
+#        indidriver:
+#                image: "srswinde/indidrivers"
+#                ports:
+#                        - "7624:7624"
+#                network_mode: "host"
+#                command:
+#                        /usr/bin/indiserver  -vvv /driverbin/tcs-indi
+#                        #/usr/bin/indiserver  -vvv /driverbin/tcs-indi /driverbin/dome-indi /driverbin/focus-indi /driverbin/snooper
 
 #        browser:
 #                image: "srswinde/firefox"
@@ -39,7 +38,7 @@ services:
 #                        /usr/bin/chromium-browser /usr/bin/chromium-browser --no-sandbox --app=http://localhost/tcs.html
 #                network_mode: "host"
 #
-#
+
 #        xephem:
 #                image: "srswinde/xephem"
 #                volumes:
@@ -49,6 +48,6 @@ services:
 #                        - DISPLAY=$DISPLAY
 #                        - HOME=/home/developer
 #                network_mode: "host"
-#                depends_on:
-#                        - browser
+#                #                depends_on:
+#                #                        - browser
 #

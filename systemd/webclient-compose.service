@@ -1,0 +1,19 @@
+[Unit]
+Description=Docker Compose container starter
+After=docker.service network-online.target
+Requires=docker.service network-online.target
+
+[Service]
+WorkingDirectory=/etc/compose
+Environment=WWW_DIR={www_dir}
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/usr/local/bin/docker-compose up -d
+
+ExecStop=/usr/local/bin/docker-compose  down
+
+ExecReload=/usr/local/bin/docker-compose   up -d
+
+[Install]
+WantedBy=multi-user.target

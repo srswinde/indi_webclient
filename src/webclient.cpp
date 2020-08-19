@@ -12,6 +12,8 @@
 #include <sstream>
 #include <ostream>
 #include <unistd.h>
+#include "base64.h"
+
 using json = nlohmann::json;
 #include "webclient.h"
 bool test = true;
@@ -48,10 +50,10 @@ std::string ComQ::pop()
 /********************************************************************
  * WSthread
  * Args:
- *      q-> queue that handles json data form indidriver to webpage
+ *      q-> queue that handles json data from indidriver to webpage
  *      driverQ -> queue that handles json data from webpage to indidriver
  * Description:
- *      THis is the thread that handles the websocket communiccation
+ *      THis is the thread that handles the websocket communication
  *      between this program and the webpage. 
  *
  *
@@ -70,7 +72,7 @@ void WSthread(ComQ *websocQ, ComQ  *driverQ)
 		std::string input;
 		json inj;
 		
-		getline(std::cin, input)	;
+		getline(std::cin, input);
 
 
 		try
@@ -179,7 +181,11 @@ void MyClient::newProperty(INDI::Property *property)
 	ISwitchVectorProperty *svp;
 	ITextVectorProperty *tvp;
 	INumberVectorProperty *nvp;
+	ILightVectorProperty *lvp;
+	IBLOBVectorProperty *bvp;
 	json indijson;
+
+
 	switch(property->getType())
 	{
 		case INDI_SWITCH:
@@ -198,9 +204,20 @@ void MyClient::newProperty(INDI::Property *property)
 			indijson = jsonify(tvp);
 			clientQ->push(&indijson);
 		break;
+		case INDI_LIGHT:
+			 lvp = property->getLight();
+			 indijson = jsonify(lvp);
+			 clientQ->push(&indijson);
+		break;
+		case INDI_BLOB:
+			 bvp = property->getBLOB();
+			 indijson = jsonify(bvp);
+			 clientQ->push(&indijson);
+			 web_client->setBLOBMode( B_ALSO, bvp->device, bvp->name);
+			 
 
 		default:
-			std::cout << "IDK" << std::endl;
+			std::cout << "{\"Error\": \"could not understand INDI Property.\"}" << std::endl;
 	}
 	
 
@@ -237,6 +254,17 @@ void MyClient::newText(ITextVectorProperty *tvp)
 /**************************************************************************************
 **
 ***************************************************************************************/
+void MyClient::newLight(ILightVectorProperty *lvp)
+{
+		
+		json jlvp = jsonify(lvp);
+		clientQ->push(&jlvp);
+
+}
+
+/**************************************************************************************
+**
+***************************************************************************************/
 void MyClient::newMessage(INDI::BaseDevice *dp, int messageID)
 {
 	json jmsg = jsonify(dp->messageQueue(messageID), dp->getDeviceName());
@@ -252,15 +280,10 @@ void MyClient::newMessage(INDI::BaseDevice *dp, int messageID)
 void MyClient::newBLOB(IBLOB *bp)
 {
     // Save FITS file to disk
-    std::ofstream myfile;
-
-    myfile.open("ccd_simulator.fits", std::ios::out | std::ios::binary);
-
-    myfile.write(static_cast<char *>(bp->blob), bp->bloblen);
-
-    myfile.close();
-
-    IDLog("Received image, saved as ccd_simulator.fits\n");
+	//json jbvp = jsonify( bp );
+	json jbp = jsonify(bp);
+	clientQ->push(&jbp);
+	
 }
 
 
@@ -395,6 +418,118 @@ void * 	aux
 
 }
 
+json MyClient::jsonify(ILightVectorProperty *lvp)
+{
+/*
+
+char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPState 	s
+ILight * 	lp
+int 	nlp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux
+*/
+	json jlvp;
+	ILight *lp;
+	jlvp["metainfo"] = "lvp";
+	jlvp["device"] = lvp->device;
+	jlvp["name"] = lvp->name;
+	jlvp["label"] = lvp->label;
+	jlvp["group"] = lvp->group;
+	jlvp["state"] = lvp->s;
+	jlvp["timestsamp"] = "";
+	for(int ii=0; ii<lvp->nlp; ii++)
+	{
+		lp=lvp->lp+ii;
+		jlvp["lp"][ii]["name"] = lp->name;
+		jlvp["lp"][ii]["label"] = lp->label;
+		jlvp["lp"][ii]["s"] = lp->s;
+	}
+
+	return jlvp;
+
+}
+
+
+json MyClient::jsonify(IBLOBVectorProperty *bvp)
+{
+/*
+
+char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPerm 	p
+double 	timeout
+IPState 	s
+IBLOB * 	bp
+int 	nbp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux
+*/
+	json jbvp;
+	IBLOB *bp;
+	jbvp["metainfo"] = "bvp";
+	jbvp["device"] = bvp->device;
+	jbvp["name"] = bvp->name;
+	jbvp["label"] = bvp->label;
+	jbvp["group"] = bvp->group;
+	jbvp["perm"] = bvp->p;
+	jbvp["timeout"] = bvp->timeout;
+	jbvp["state"] = bvp->s;
+	jbvp["timestsamp"] = "";
+	for(int ii=0; ii<bvp->nbp; ii++)
+	{
+		bp=bvp->bp+ii;
+		jbvp["bp"][ii]["name"] = bp->name;
+		jbvp["bp"][ii]["label"] = bp->label;
+		jbvp["bp"][ii]["format"] = bp->format;
+		jbvp["bp"][ii]["bloblen"] = bp->bloblen;
+		jbvp["bp"][ii]["size"] = bp->size;
+		
+	}
+
+	return jbvp;
+
+}
+
+json MyClient::jsonify(IBLOB *bp)
+{
+/*
+
+char 	device [MAXINDIDEVICE]
+char 	name [MAXINDINAME]
+char 	label [MAXINDILABEL]
+char 	group [MAXINDIGROUP]
+IPerm 	p
+double 	timeout
+IPState 	s
+IBLOB * 	bp
+int 	nbp
+char 	timestamp [MAXINDITSTAMP]
+void * 	aux
+*/
+		json jbp;
+
+		unsigned char * blobdata = static_cast<unsigned char *> (bp->blob);
+		unsigned char *ubase64 = (unsigned char *) malloc(4*bp->size/3);
+		char * base64;
+		int size = to64frombits( ubase64, blobdata, bp->size);
+		base64 = (char *) ubase64;
+		jbp["metainfo"] = "blob";
+		jbp["name"] = bp->name;
+		jbp["label"] = bp->label;
+		jbp["format"] = bp->format;
+		jbp["size"] = bp->size;
+		jbp["blob"] = base64;
+		
+		return jbp;
+	
+
+}
 
 json MyClient::jsonify(std::string msg, const char *devname)
 {
@@ -499,7 +634,7 @@ void MyClient::Update(json data)
 		grpname = data["newText"]["group"];
 		propname = data["newText"]["name"];
 		dev = getDevice(devname.c_str());
-		tvp = dev->getText( propname.c_str());
+		tvp = dev->getText( propname.c_str() );
 		
 		for(unsigned int ii=0; ii<data["newText"]["tp"].size(); ii++)
 		{
@@ -515,20 +650,33 @@ void MyClient::Update(json data)
 int main(int argc, char ** argv )
 {
 	ComQ webQ; //Q for communicating with web page
-	ComQ driverQ;//Q for communicating with indiserver
+	ComQ driverQ;//Q for communicating with indiserver	
+	std::string driverData;
+	//b_client->watchDevice("TCS-NG-INDI");
+
+	//for some reason watchProperty causes an error
+	//web_client->watchProperty("TCS-NG-INDI", "stTELEM");
+	//web_client->watchProperty("TCS-NG-INDI", "SERVICE_POSITIONS");
+	//web_client->watchProperty("TCS-NG-INDI", "CONNECTION");
+
+	
 	web_client->setQ(&webQ);
 	web_client->setDevQ(&driverQ);
-	web_client->setServer(argv[1], 7624);
-	web_client->watchProperty("TCS-NG-INDI", "stTELEM");
-	web_client->watchProperty("TCS-NG-INDI", "SERVICE_POSITIONS");
+	if(argc == 2)
+		web_client->setServer(argv[1], 7624);
+	else if(argc == 3)
+		web_client->setServer(argv[1], atoi(argv[2]));
+	else
+		web_client->setServer("localhost", 7624);
+
     
 	
-    	while(web_client->connectServer() == false)
+    while(web_client->connectServer() == false)
 	{
 		usleep(2e6);
 	}
 	std::vector< INDI::BaseDevice * >  devs;
-	web_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
+	//web_client->getDevices(devs, INDI::BaseDevice::GENERAL_INTERFACE );
 	
 	std::thread t1(WSthread, &webQ, &driverQ);
 
@@ -537,7 +685,17 @@ int main(int argc, char ** argv )
 	{
 		if(driverQ.size() !=0)
 		{
-			web_client->Update(json::parse(driverQ.pop()));
+			try
+			{
+				web_client->Update(json::parse(driverQ.pop()));
+			}	
+			catch(...)
+			{
+				std::cerr << "Could not parse driver data"<< std::endl;
+				continue;
+			}
+
+
 		}
 		usleep( (int) 1e5 );
 	}
@@ -545,3 +703,4 @@ int main(int argc, char ** argv )
 	test=false;
 	t1.join();
 }
+
